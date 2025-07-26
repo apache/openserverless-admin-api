@@ -1,0 +1,8 @@
+AUTHO_CLIENT=
+AUTH0_SECRET=
+AUTH0_DOMAIN=
+AUTH0_ENABLED=true
+
+RECAPTCHA_SECRET=
+RECAPTCHA_VALIDATE=false
+RECAPTCHA_VALID_DOMAINS=register.nuvolaris.dev;nuvolaris.dev;nuvolaris.io;localhost

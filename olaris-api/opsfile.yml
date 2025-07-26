@@ -1,0 +1,96 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+version: "3"
+
+env:
+  KUBECONFIG:
+    sh: |-
+      if test -e $OPS_TMP/kubeconfig
+      then echo $OPS_TMP/kubeconfig
+      else echo ~/.kube/config
+      fi
+
+  IMAGE_TAG:
+    sh: git describe --tags --abbrev=0 2>/dev/null || git rev-parse --short HEAD     
+
+  CDB_HOST: couchdb  
+
+  CDB_USER:
+    sh: nuv debug kube ctl CMD="-n nuvolaris get wsk/controller -o jsonpath='{.spec.couchdb.admin.user}'"
+
+  CDB_PASSWORD:
+    sh: nuv debug kube ctl CMD="-n nuvolaris get wsk/controller -o jsonpath='{.spec.couchdb.admin.password}'"
+
+  APIHOST:
+    sh: nuv debug kube ctl CMD="-n nuvolaris get cm/config -o jsonpath='{.metadata.annotations.apihost}'"
+
+  REDIS_PREFIX:
+    sh: echo "nuvolaris:"
+
+  REDIS_URL:
+    sh: |
+      echo redis://nuvolaris:$(kubectl -n nuvolaris get wsk/controller -o jsonpath='{.spec.redis.nuvolaris.password}')@redis:6379  
+
+dotenv:
+  - .env       
+
+tasks:
+
+  api:deploy:
+    ignore_error: false
+    cmds:
+    - envsubst -i api-template.yaml -o _api-template.yaml
+    - kubectl -n nuvolaris apply -f _api-template.yaml
+
+  api:undeploy:
+    ignore_error: false
+    cmds:
+    - envsubst -i api-template.yaml -o _api-template.yaml
+    - kubectl -n nuvolaris delete -f _api-template.yaml    
+
+  nginx:deploy:
+    desc: deploy nuvolaris admin api on an nginx based deployment (Kind or similar)
+    ignore_error: true
+    cmds:
+    - task: api:deploy
+    - envsubst -i nginx-template.yaml -o _nginx-template.yaml
+    - kubectl -n nuvolaris apply -f _nginx-template.yaml
+
+  nginx:undeploy:
+    desc: undeploy nuvolaris admin api on an nginx based deployment (Kind or similar)
+    ignore_error: true
+    cmds:
+    - task: api:undeploy
+    - envsubst -i nginx-template.yaml -o _nginx-template.yaml
+    - kubectl -n nuvolaris delete -f _nginx-template.yaml 
+
+  k3s:deploy:
+    desc: deploy nuvolaris admin api on an nginx based deployment (Kind or similar)
+    ignore_error: true
+    cmds:
+    - task: api:deploy
+    - envsubst -i k3s-template.yaml -o _k3s-template.yaml
+    - kubectl -n nuvolaris apply -f _k3s-template.yaml
+
+  k3s:undeploy:
+    desc: undeploy nuvolaris admin api on an nginx based deployment (Kind or similar)
+    ignore_error: true
+    cmds:
+    - task: api:undeploy
+    - envsubst -i k3s-template.yaml -o _k3s-template.yaml
+    - kubectl -n nuvolaris delete -f _k3s-template.yaml        

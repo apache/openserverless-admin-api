@@ -1,0 +1,59 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+.git-hooks/
+__pycache__/
+__pypackages__
+.pdm.toml
+.*-version
+kubeconfig
+openwhisk-deploy-kube/
+kustomization.yaml
+playground
+examples/
+aliases
+deploy/extract/
+deploy/whisk-system/
+deploy/**/*_generated.yaml
+actions/**/*.zip
+node_modules/
+.env
+clusters/id_rsa*
+clusters/controlplane.yaml
+clusters/talosconfig
+clusters/worker.yaml
+*.kubeconfig
+run.pid
+*.off
+actions/**/nuvolaris/
+!actions/**/__main__.py
+_*.yaml
+apihost.txt
+.git-hooks/
+installer
+whisk.properties
+.task/
+*.log
+.latestcheck
+_failed.txt
+deploy.tar
+actions/github/callback/common
+actions/github/webhook/common
+*.egg-info
+.venv
+build
+tokens

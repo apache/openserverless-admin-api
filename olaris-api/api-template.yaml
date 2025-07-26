@@ -1,0 +1,97 @@
+---
+# Source: openwhisk/templates/couchdb-init-cm.yaml
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Kind deployment example
+#
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ${USERNAME:-nuvolaris}-system-api
+  namespace: nuvolaris
+  labels:
+    app: ${USERNAME:-nuvolaris}-system-api
+spec:  
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${USERNAME:-nuvolaris}-system-api
+  template:
+    metadata:
+      labels:
+        name: ${USERNAME:-nuvolaris}-system-api
+        app: ${USERNAME:-nuvolaris}-system-api
+    spec:
+      serviceAccount: nuvolaris-wsku
+      containers:
+        - name: ${USERNAME:-nuvolaris}-system-api
+          image: registry.hub.docker.com/nuvolaris/nuvolaris-system-api:${IMAGE_TAG:-1.3.0-mastrogpt.2405061820}
+          imagePullPolicy: Always
+          command: ["./run.sh"]
+          ports:
+            - containerPort: 5000
+              name: api
+          env:
+          - name: "APIHOST"
+            value: "${APIHOST:-localhost}"
+          - name: "AUTH0_DOMAIN"
+            value: "${AUTH0_DOMAIN}"
+          - name: "AUTH0_CLIENT"
+            value: "${AUTHO_CLIENT}"
+          - name: "AUTH0_SECRET"
+            value: "${AUTH0_SECRET}"
+          - name: "AUTH0_ENABLED"
+            value: "${AUTH0_ENABLED}"             
+          - name: "REDIS_PREFIX"
+            value: "${REDIS_PREFIX}"
+          - name: "REDIS_URL"
+            value: "${REDIS_URL}"
+          - name: "RECAPTCHA_SECRET"
+            value: "${RECAPTCHA_SECRET}"  
+          - name: "RECAPTCHA_VALID_DOMAINS"
+            value: "${RECAPTCHA_VALID_DOMAINS}" 
+          - name: "RECAPTCHA_VALIDATE"
+            value: "${RECAPTCHA_VALIDATE}"            
+          - name: "COUCHDB_SERVICE_PORT"
+            value: "5984" 
+          - name: "COUCHDB_SERVICE_HOST"
+            value: "couchdb" 
+          - name: "COUCHDB_ADMIN_USER"
+            value: "${CDB_USER}"  
+          - name: "COUCHDB_ADMIN_PASSWORD"
+            value: "${CDB_PASSWORD}"
+          - name: "DEFAULT_MINIO_QUOTA"
+            value: "${SYS_API_MINIO_QUOTA:-100}"
+          - name: "DEFAULT_REDIS_QUOTA"
+            value: "${SYS_API_REDIS_QUOTA:-1}" 
+          - name: "DEFAULT_MONGO_QUOTA"
+            value: "${SYS_API_MONGO_QUOTA:-100}" 
+          - name: "DEFAULT_POSTGRES_QUOTA"
+            value: "${SYS_API_MONGO_QUOTA:-100}"                                                                                                                                                         
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${USERNAME:-nuvolaris}-system-api
+  namespace: nuvolaris
+spec:
+  ports:
+    - name: api
+      port: 5000
+  selector:
+    app: ${USERNAME:-nuvolaris}-system-api
