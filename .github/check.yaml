@@ -15,7 +15,23 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-.vscode
-.venv
-tokens
-.env
+
+name: openserverless-admin-api-check
+on: 
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    name: Check OpenServerless Operator
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: License   
+        uses: apache/skywalking-eyes@main
+      
