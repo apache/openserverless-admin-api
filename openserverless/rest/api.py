@@ -16,10 +16,10 @@
 # under the License.
 #
 
-from nuvolaris import app
+from openserverless import app
 from http import HTTPStatus
 
-import nuvolaris.common.response_builder as res_builder
+import openserverless.common.response_builder as res_builder
 
 
 @app.route('/system/info')

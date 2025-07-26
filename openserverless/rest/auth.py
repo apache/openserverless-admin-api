@@ -16,12 +16,12 @@
 # under the License.
 #
 
-from nuvolaris import app
+from openserverless import app
 
-from nuvolaris.impl.auth.auth_service import AuthService
-from nuvolaris.security.ow_authorize import ow_authorize
+from openserverless.impl.auth.auth_service import AuthService
+from openserverless.security.ow_authorize import ow_authorize
 from flask import request
-import nuvolaris.common.response_builder as res_builder
+import openserverless.common.response_builder as res_builder
 from flasgger import swag_from
 
 @app.route('/system/api/v1/auth/<login>',methods=['PATCH'])

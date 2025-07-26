@@ -17,7 +17,7 @@
 #
 import os, json, time, sys, logging
 import requests as req
-import nuvolaris.config as cfg
+import openserverless.config as cfg
 
 
 class CouchDB:

@@ -19,11 +19,11 @@ import datetime
 import json
 import os
 import logging
-import nuvolaris.common.response_builder as res_builder
-import nuvolaris.couchdb.bcrypt_util as bu
+import openserverless.common.response_builder as res_builder
+import openserverless.couchdb.bcrypt_util as bu
 
-from nuvolaris.couchdb.couchdb_util import CouchDB
-from nuvolaris.common.kube_api_client import KubeApiClient
+from openserverless.couchdb.couchdb_util import CouchDB
+from openserverless.common.kube_api_client import KubeApiClient
 
 USER_META_DBN = "users_metadata"
 

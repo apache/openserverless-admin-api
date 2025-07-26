@@ -64,9 +64,9 @@ swagger = Swagger(app=app,config=swagger_config,merge=True)
 
 listen_port = os.environ.get("LISTEN_PORT", "5000")
 
-import nuvolaris.rest.api
-import nuvolaris.rest.auth
+import openserverless.rest.api
+import openserverless.rest.auth
 
-if __name__ == "nuvolaris":
+if __name__ == "openserverless":
     from waitress import serve
     serve(app, host="0.0.0.0", port=listen_port)

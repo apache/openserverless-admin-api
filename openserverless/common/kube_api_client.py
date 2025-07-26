@@ -23,8 +23,8 @@ import logging
 from base64 import b64decode
 from .validation import is_empty_arg
 
-from nuvolaris.config.app_config import AppConfig
-from nuvolaris.error.config_exception import ConfigException
+from openserverless.config.app_config import AppConfig
+from openserverless.error.config_exception import ConfigException
 
 SERVICE_HOST_ENV_NAME = "KUBERNETES_SERVICE_HOST"
 SERVICE_PORT_ENV_NAME = "KUBERNETES_SERVICE_PORT"

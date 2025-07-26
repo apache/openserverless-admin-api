@@ -16,4 +16,4 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-uv run -m nuvolaris "$@"
+uv run -m openserverless "$@"

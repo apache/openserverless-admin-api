@@ -17,8 +17,8 @@
 #
 from base64 import b64decode, b64encode
 from urllib.parse import quote, unquote
-from nuvolaris.couchdb.couchdb_util import CouchDB
-from nuvolaris.error.api_error import EncodeError, DecodeError, AuthorizationError
+from openserverless.couchdb.couchdb_util import CouchDB
+from openserverless.error.api_error import EncodeError, DecodeError, AuthorizationError
 
 import json
 import os

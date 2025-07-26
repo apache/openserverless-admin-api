@@ -18,9 +18,9 @@
 
 import logging
 import os
-import nuvolaris.common.validation as validation
-import nuvolaris.common.response_builder as res_builder
-from nuvolaris.common.kube_api_client import KubeApiClient
+import openserverless.common.validation as validation
+import openserverless.common.response_builder as res_builder
+from openserverless.common.kube_api_client import KubeApiClient
 
 class UserValidation:
     

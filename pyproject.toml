@@ -51,4 +51,4 @@ dev = [
     ]
 
 [project.scripts]
-system = "nuvolaris.app:main"
+system = "openserverless.app:main"
