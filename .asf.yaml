@@ -1,0 +1,8 @@
+github:
+  description: "OpenServerless Admin API"
+  homepage: https://github.com/apache/openserverless-admin-api
+  labels:
+    - openserverless
+    - rest
+    - api
+    - apache
