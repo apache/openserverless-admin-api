@@ -23,6 +23,9 @@
 
 Lighweight OpenServerless Admin REST API Layer.
 
+
+## Endpoints
+
 Available APIs at the moment:
 
 ### Authentication API
@@ -38,15 +41,91 @@ Available APIs at the moment:
 
 ## Developer instructions
 
-You need to have access to the kubernetes cluster.
+You need to have access to be Apache OpenServerless admin and have access to kubernetes cluster.
 
-Give the command task `setup-developer` will:
+Refer to the [Apache OpenServerless installation page](https://openserverless.apache.org/docs/installation/install/docker/): 
+
+Give the command `task setup-developer` and it will:
 
 - extract the required ca.crt and token from operator service account
 - copy a sample .env file
-- install dependencies
+- install required python dependencies
 
 After that, you can use VSCode debugger to start the application.
 Otherwise you can give an `uv run -m openserverless` to start.
 
 Open http://localhost:5002/system/apidocs/ to see the API documentation.
+
+## Tasks
+
+Taskfile supports the following tasks:
+
+```yaml
+* build:                 Build the image locally
+* build-and-load:        Build the image and loads it to local Kind cluster
+* buildx:                Build the docker image using buildx. Set PUSH=1 to push the image to the registry. 
+* docker-login:          Login to the docker registry. Set REGISTRY=ghcr or REGISTRY=dockerhub in .env to use the respective registry. 
+* get-tokens:            Get Service Account tokens and save them to tokens directory
+* image-tag:             Create a new tag for the current git commit.       
+* run:                   Run the admin api locally, using configuration from .env file 
+* setup-developer:       Setup developer environment
+```
+
+## Build and push
+
+### Private registry or local image
+
+To build an image and push it on a private repository, firstly choose which
+registry you want to use.
+Tasks support is for Github (ghcr) and Dockerhub (dockerhub).
+So copy the `.env.example` to `.env` and configure the required variables for
+authentication and set the `REGISTRY` and `NAMESPACE` accordly.
+
+Now create a new tag
+
+```bash
+$ task image-tag
+```
+You should see an output like this:
+
+```bash
+Deleted tag '0.1.0-incubating.2507270903' (was 434b400)
+0.1.0-incubating.2507270910
+```
+
+:bulb: **NOTE** If you leave unset `REGISTRY` a local `openserverless-admin-api` 
+image will be built, using the generated tag.
+
+If you setup the `REGISTRY` and `NAMESPACE`, you can give a:
+
+```bash
+$ task docker-login
+```
+
+To build:
+
+```bash
+$ task buildx
+```
+
+To build and push
+
+```bash
+$ task buildx PUSH=1
+```
+
+### Apache repository
+To build an official Apache OpensSrverless Admin Api image, you
+need to be a committer.
+
+If you have the proper permissions, the build process will start pushing a
+new tag to apache/openserverless-admin-api repository.
+So, for example,  if your tag is `0.1.0-incubating.2507270910` and your
+git remote is `apache`
+
+```bash
+$ git push apache 0.1.0-incubating.2507270910
+```
+
+This will trigger the build workflow, and the process will be visible at
+https://github.com/apache/openserverless-admin-api/actions

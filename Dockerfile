@@ -27,24 +27,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
-# Add nuvolaris user
-RUN useradd -m -u 1001 -s /bin/bash nuvolaris
-WORKDIR /home/nuvolaris
+# Add openserverless user
+RUN useradd -m -u 1001 -s /bin/bash openserverless
+WORKDIR /home/openserverless
 
 
 # Copy source code con permessi corretti
-ADD --chown=nuvolaris:nuvolaris nuvolaris /home/nuvolaris/nuvolaris/
-ADD --chown=nuvolaris:nuvolaris run.sh pyproject.toml uv.lock /home/nuvolaris/
+ADD --chown=openserverless:openserverless openserverless /home/openserverless/openserverless/
+ADD --chown=openserverless:openserverless run.sh pyproject.toml uv.lock /home/openserverless/
 
 # Install uv (Python dependency manager)
 RUN pip install --no-cache-dir uv
 
 # Install Python dependencies usando il lockfile
-RUN uv pip install --system --requirement pyproject.toml
+RUN uv venv && uv pip install --requirement pyproject.toml
 
 # ...existing code...
-USER nuvolaris
-ENV HOME=/home/nuvolaris
+USER openserverless
+ENV HOME=/home/openserverless
 EXPOSE 5000
 
-CMD ["./run.sh"]
+CMD ["uv", "run", "-m", "openserverless"]

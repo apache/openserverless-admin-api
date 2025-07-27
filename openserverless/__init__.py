@@ -20,7 +20,7 @@ __version__ = '0.1.0'
 import logging
 import os
 
-from flask import Flask
+from flask import Flask, request
 from flasgger import Swagger
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -57,8 +57,21 @@ swagger_config = {
     "auth": dict({})
 }
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
+
+
 app = Flask(__name__)
+
+@app.before_request
+def log_request_info():
+    logging.debug(
+        f"Request: {request.method} {request.path} | "
+        f"Remote: {request.remote_addr}"        
+    )
+
 cors = CORS(app)
 swagger = Swagger(app=app,config=swagger_config,merge=True)
 
@@ -67,6 +80,3 @@ listen_port = os.environ.get("LISTEN_PORT", "5000")
 import openserverless.rest.api
 import openserverless.rest.auth
 
-if __name__ == "openserverless":
-    from waitress import serve
-    serve(app, host="0.0.0.0", port=listen_port)

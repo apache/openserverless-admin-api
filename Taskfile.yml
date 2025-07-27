@@ -19,12 +19,11 @@
 version: '3'
 
 vars:
-  BASETAG: 0.1.0
-
-env:
-  OPS_API_TAG: 
-    sh: git describe --tags --abbrev=0 2>/dev/null || git rev-parse --short HEAD
-  OPS_API_IMAGE: registry.hub.docker.com/apache/openserverless-admin-api
+  BASETAG: 0.1.0-incubating
+  COMMIT_ID:
+    sh: git rev-parse --short HEAD
+  TAG:
+    sh: git describe --tags --abbrev=0 2>/dev/null || echo latest
 
 dotenv:
  - .env  
@@ -49,34 +48,105 @@ tasks:
         then cp .env.example .env
           echo "Please edit .env file with your local CouchDB and Kubernetes credentials"
         fi
+      - |
+        if [ ! -d .venv ];
+        then uv venv
+        fi
       - uv pip install -r pyproject.toml 2>/dev/null 
-      
 
+  docker-login-ghcr: >
+    silent: true
+    cmds: 
+      - |
+        echo "Logging in to ghcr.io as $GITHUB_USER"
+        echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin
+  
+  docker-login-dockerhub:
+    silent: true
+    cmds: 
+      - |
+        echo "Logging in to dockerhub as $DOCKERHUB_USER"
+        echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USER --password-stdin
+
+  docker-login:
+    desc: |
+      Login to the docker registry. Set REGISTRY=ghcr or REGISTRY=dockerhub in .env
+      to use the respective registry.
+    silent: true
+    cmds:
+      - |
+        if [ -z "$REGISTRY" ]; then
+          echo "Error: REGISTRY variable is not set in .env"
+          exit 1
+        fi
+        task docker-login-$REGISTRY
+  
   image-tag:
-    - git tag -d $(git tag) 
-    - git tag -f {{.P}}{{.BASETAG}}.$(date +%y%m%d%H%M)
-    - env PAGER= git tag
+    silent: true
+    desc: |
+      Create a new tag for the current git commit.      
+    cmds:
+      - git tag -d $(git tag)
+      - git tag -f {{.BASETAG}}.$(date +%y%m%d%H%M)
+      - env PAGER= git tag
+  
+  base-image-name:
+    silent: true
+    cmds:
+      - |
+        if [ -n "$REGISTRY" ] && [ -z "$NAMESPACE" ]; then
+          echo "Error: NAMESPACE variable is not set in .env"
+          exit 1
+        fi
+        if [ "$REGISTRY" = "ghcr" ]; then
+          echo "ghcr.io/$NAMESPACE/openserverless-admin-api"
+        elif [ "$REGISTRY" = "dockerhub" ]; then
+          echo "docker.io/$NAMESPACE/openserverless-admin-api"
+        elif [ "$REGISTRY" = "apache" ]; then
+          echo "registry.hub.docker.com/apache/openserverless-admin-api"
+        else
+          echo "openserverless-admin-api"
+        fi
 
-  docker-login: >
-    echo $DOCKER_HUB_TOKEN | docker login registry.hub.docker.com -u $DOCKER_HUB_USER --password-stdin
-
-  docker-setup:
-    - docker buildx create --use
-    - docker run -it --rm --privileged tonistiigi/binfmt --install all
-
-  build: 
-    - >
-      docker build . -t {{.OPS_API_IMAGE}}:{{.OPS_API_TAG}} --load
+  buildx:
+    desc: |
+      Build the docker image using buildx. Set PUSH=1 to push the image to the registry.
+    silent: true
+    cmds:
+      - |
+        BASEIMG=$(task base-image-name)
+        IMG="$BASEIMG:{{.TAG}}"
+        if [ -n "{{.PUSH}}" ]; then
+          if [ -z "$REGISTRY" ]; then
+            echo "Error: REGISTRY variable must be set in .env to push the image"
+            exit 1
+          fi
+          {{.DRY}} docker buildx build -t $IMG --platform linux/amd64,linux/arm64 . --push
+        else
+          {{.DRY}} docker buildx build -t $IMG . --load
+        fi
+  
+  build:
+    silent: true
+    desc: Build the image locally
+    cmds:
+      - |
+        BASEIMG=$(task base-image-name)
+        IMG="$BASEIMG:{{.TAG}}"
+        docker build . -t $IMG --load
 
   build-and-load:
-    - task: build
-    - > 
-      kind load docker-image {{.OPS_API_IMAGE}}:{{.OPS_API_TAG}} --name=nuvolaris
-
-  # Docker image
-  build-and-push:
+    silent: true
+    desc: Build the image and loads it to local Kind cluster
     cmds:
-      - task: docker-setup
-      - task: docker-login
-      - "docker buildx build --platform linux/amd64,linux/arm64 . -t {{.OPS_API_IMAGE}}:{{.OPS_API_TAG}} --push"
-  
+      - task: build
+      - |
+        BASEIMG=$(task base-image-name)
+        IMG="$BASEIMG:{{.TAG}}"
+        kind load docker-image $IMG --name=nuvolaris
+
+  run:
+    desc: |
+      Run the admin api locally, using configuration from .env file
+    cmds:
+      - uv run -m openserverless
