@@ -14,83 +14,76 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+version: '3'
 
-version: "3"
+vars:
+  VAR: ""
+  MSG: ""
+  VAL: ""
+  RETRY: 100
+  TIMEOUT: 15s
+  CONTEXT: ""
 
 env:
+
   KUBECONFIG:
-    sh: |-
-      if test -e $OPS_TMP/kubeconfig
-      then echo $OPS_TMP/kubeconfig
+    sh: |
+      if test -e "$OPS_TMP/kubeconfig"
+      then echo "$OPS_TMP/kubeconfig"
       else echo ~/.kube/config
       fi
 
-  IMAGE_TAG:
-    sh: git describe --tags --abbrev=0 2>/dev/null || git rev-parse --short HEAD     
+  SYS_API_CDB_HOST: couchdb
 
-  CDB_HOST: couchdb  
+  SYS_API_CDB_USER:
+    sh: $OPS debug kube ctl CMD="-n nuvolaris get wsk/controller -o jsonpath='{.spec.couchdb.admin.user}'"
 
-  CDB_USER:
-    sh: nuv debug kube ctl CMD="-n nuvolaris get wsk/controller -o jsonpath='{.spec.couchdb.admin.user}'"
+  SYS_API_CDB_PASSWORD:
+    sh: $OPS debug kube ctl CMD="-n nuvolaris get wsk/controller -o jsonpath='{.spec.couchdb.admin.password}'"
 
-  CDB_PASSWORD:
-    sh: nuv debug kube ctl CMD="-n nuvolaris get wsk/controller -o jsonpath='{.spec.couchdb.admin.password}'"
+  SYS_API_HOSTNAME:
+    sh: $OPS debug kube ctl CMD="-n nuvolaris get ingress/apihost -o jsonpath='{.spec.rules[0].host}'"
 
-  APIHOST:
-    sh: nuv debug kube ctl CMD="-n nuvolaris get cm/config -o jsonpath='{.metadata.annotations.apihost}'"
-
-  REDIS_PREFIX:
-    sh: echo "nuvolaris:"
-
-  REDIS_URL:
-    sh: |
-      echo redis://nuvolaris:$(kubectl -n nuvolaris get wsk/controller -o jsonpath='{.spec.redis.nuvolaris.password}')@redis:6379  
-
-dotenv:
-  - .env       
+  INGRESS_TYPE:
+    sh: $OPS util ingress-type
 
 tasks:
 
-  api:deploy:
+  deploy:
+    silent: true
     ignore_error: false
+    desc: deploy the admin api 
     cmds:
-    - envsubst -i api-template.yaml -o _api-template.yaml
-    - kubectl -n nuvolaris apply -f _api-template.yaml
-
-  api:undeploy:
-    ignore_error: false
-    cmds:
-    - envsubst -i api-template.yaml -o _api-template.yaml
-    - kubectl -n nuvolaris delete -f _api-template.yaml    
-
-  nginx:deploy:
-    desc: deploy nuvolaris admin api on an nginx based deployment (Kind or similar)
+    - test -e ${INGRESS_TYPE}-template.yaml || die "No avalable template for ingress type ${INGRESS_TYPE}."
+    - test -n "$IMAGES_SYSTEMAPI" || die "IMAGES_SYSTEMAPI is not set. Please set it to the desired image version."
+    - envsubst -i api-template.yaml -o _api.yaml > /dev/null 2>&1
+    - envsubst -i ${INGRESS_TYPE}-template.yaml -o _ingress.yaml > /dev/null 2>&1
+    - kubectl -n nuvolaris apply -f _api.yaml
+    #- cat _ingress.yaml
+    - kubectl -n nuvolaris apply -f _ingress.yaml
+    - |
+      echo "Admin API deployed with HOSTNAME: ${SYS_API_HOSTNAME}/system"
+  
+  undeploy:
+    silent: true
+    desc: undeploy the admin api
     ignore_error: true
     cmds:
-    - task: api:deploy
-    - envsubst -i nginx-template.yaml -o _nginx-template.yaml
-    - kubectl -n nuvolaris apply -f _nginx-template.yaml
+    - kubectl -n nuvolaris delete sts/nuvolaris-system-api ing/nuvolaris-system-api-ingress
+    - |
+      echo "System API undeployed"
+  
 
-  nginx:undeploy:
-    desc: undeploy nuvolaris admin api on an nginx based deployment (Kind or similar)
-    ignore_error: true
+  update:
+    silent: true
+    desc: update the OpenServerless Admin Api stateful set
     cmds:
-    - task: api:undeploy
-    - envsubst -i nginx-template.yaml -o _nginx-template.yaml
-    - kubectl -n nuvolaris delete -f _nginx-template.yaml 
-
-  k3s:deploy:
-    desc: deploy nuvolaris admin api on an nginx based deployment (Kind or similar)
-    ignore_error: true
-    cmds:
-    - task: api:deploy
-    - envsubst -i k3s-template.yaml -o _k3s-template.yaml
-    - kubectl -n nuvolaris apply -f _k3s-template.yaml
-
-  k3s:undeploy:
-    desc: undeploy nuvolaris admin api on an nginx based deployment (Kind or similar)
-    ignore_error: true
-    cmds:
-    - task: api:undeploy
-    - envsubst -i k3s-template.yaml -o _k3s-template.yaml
-    - kubectl -n nuvolaris delete -f _k3s-template.yaml        
+      - task: deploy
+      - kubectl -n nuvolaris rollout restart statefulset nuvolaris-system-api
+    preconditions:      
+      - sh: '[ $IMAGES_SYSTEMAPI != $CURRENT_API_VERSION ]'
+        msg: "Current OpenServerless system API stateful set it is already updated to newest version. Request ignored."
+    env:
+      CURRENT_API_VERSION:
+        sh: |
+          echo $(kubectl -n nuvolaris get pod/nuvolaris-system-api-0 -ojsonpath='{.spec.containers[0].image}')

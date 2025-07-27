@@ -27,17 +27,17 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "300"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
-  name: ${USERNAME:-nuvolaris}-system-api-ingress
+  name: nuvolaris-system-api-ingress
   namespace: nuvolaris
 spec:
   rules:
   - #
-    host: localhost
+    host: ${SYS_API_HOSTNAME:-localhost}
     http:
       paths:
       - backend:
           service:
-            name: ${USERNAME:-nuvolaris}-system-api
+            name: nuvolaris-system-api
             port:
               number: 5000
         path: /system

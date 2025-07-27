@@ -28,16 +28,16 @@ metadata:
     traefik.ingress.kubernetes.io/transport.respondingTimeouts.idleTimeout: "600"
     traefik.ingress.kubernetes.io/transport.respondingTimeouts.readTimeout: "600"
     traefik.ingress.kubernetes.io/transport.respondingTimeouts.writeTimeout: "600"
-  name:${USERNAME:-nuvolaris}-system-api-ingress
+  name: nuvolaris-system-api-ingress
   namespace: nuvolaris
 spec:
   rules:
-  - host: localhost
+  - host: ${SYS_API_HOSTNAME:-localhost}
     http:
       paths:
       - backend:
           service:
-            name: ${USERNAME:-nuvolaris}-system-api
+            name: nuvolaris-system-api
             port:
               number: 5000
         path: /system
