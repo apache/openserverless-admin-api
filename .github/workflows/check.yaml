@@ -34,4 +34,3 @@ jobs:
           submodules: recursive
       - name: License   
         uses: apache/skywalking-eyes@main
-      
