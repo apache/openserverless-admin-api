@@ -32,3 +32,4 @@ header:
     - '**/*.service'
     - '**/*.txt'
     - 'uv.lock'
+    - '.env.example'

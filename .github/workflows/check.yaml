@@ -25,7 +25,7 @@ on:
 
 jobs:
   check:
-    name: Check OpenServerless Operator
+    name: Check OpenServerless Admin Api
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
