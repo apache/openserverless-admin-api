@@ -1,3 +1,4 @@
+#!/bin/bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,22 +16,5 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
-name: openserverless-admin-api-check
-on: 
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  check:
-    name: Check OpenServerless Operator
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: License   
-        uses: apache/skywalking-eyes@main
+sudo sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+sudo apt-get -y install curl wget jq
