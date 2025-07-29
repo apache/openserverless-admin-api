@@ -17,6 +17,7 @@
 #
 
 name: openserverless-admin-api-check
+
 on: 
   push:
     branches: [main]
@@ -34,4 +35,3 @@ jobs:
           submodules: recursive
       - name: License   
         uses: apache/skywalking-eyes@main
-      
