@@ -1,0 +1,2 @@
+gnews
+beautifulsoup4

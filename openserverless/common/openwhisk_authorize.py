@@ -33,6 +33,7 @@ class OpenwhiskAuthorize:
     def __init__(self, environ=os.environ):
         self._db = CouchDB()
         self._environ = environ
+        
 
     def encode(self, username, password):
         """Returns an HTTP basic authentication encrypted string given a valid

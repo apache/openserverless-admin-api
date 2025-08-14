@@ -27,74 +27,99 @@ from openserverless.common.kube_api_client import KubeApiClient
 
 USER_META_DBN = "users_metadata"
 
+
 class AuthService:
 
     def __init__(self, environ=os.environ):
         self._environ = environ
         self.couch_db = CouchDB()
         self.kube_client = KubeApiClient()
-        
 
     def fetch_user_data(self, login: str):
         logging.info(f"searching for user {login} data")
         try:
-            selector = {"selector":{"login": {"$eq": login }}}
+            selector = {"selector": {"login": {"$eq": login}}}
             response = self.couch_db.find_doc(USER_META_DBN, json.dumps(selector))
 
-            if(response['docs']):
-                    docs = list(response['docs'])
-                    if(len(docs) > 0):
-                        return docs[0]
-            
+            if response["docs"]:
+                docs = list(response["docs"])
+                if len(docs) > 0:
+                    return docs[0]
+
             logging.warning(f"OpenServerless metadata for user {login} not found!")
             return None
         except Exception as e:
-            logging.error(f"failed to query OpenServerless metadata for user {login}. Reason: {e}")
+            logging.error(
+                f"failed to query OpenServerless metadata for user {login}. Reason: {e}"
+            )
             return None
+    
+    def env_to_dict(self, user_data, key="env"):
+        """
+        extract env from user_data and return it as a dict
+
+        Keyword arguments:
+        key -- the key to extract the env from
+        """
+        body = {}
+        if key in user_data:
+            envs = list(user_data[key])
+        else:
+            envs = []
+
+        for env in envs:
+            body[env['key']] = env['value']
+
+        return body
 
     def map_data(self, user_data):
         """
         Map the internal nuvolaris user_data records to the auth response
         """
         resp = {}
-        resp['login'] = user_data['login']
-        resp['email'] = user_data['email']
+        resp["login"] = user_data["login"]
+        resp["email"] = user_data["email"]
 
-        if 'env' in user_data:
-            resp['env'] = user_data['env']
+        if "env" in user_data:
+            resp["env"] = user_data["env"]
 
-        if 'quota' in user_data:
-            resp['quota'] = user_data['quota']    
+        if "quota" in user_data:
+            resp["quota"] = user_data["quota"]
 
-        return resp          
+        return resp
 
     def login(self, login, password):
         user_data = self.fetch_user_data(login)
 
-        if(user_data):
-            if bu.verify_password(password, user_data['password']):
-            #if(password == user_data['password']):   
+        if user_data:
+            if bu.verify_password(password, user_data["password"]):
+                # if(password == user_data['password']):
                 return res_builder.build_response_with_data(self.map_data(user_data))
             else:
                 logging.warning(f"password mismatch for user {login}")
                 return res_builder.build_error_message(f"Invalid credentials", 401)
         else:
-           logging.warning(f"no user {login} found")
-           return res_builder.build_error_message(f"Invalid credentials", 401)
-        
+            logging.warning(f"no user {login} found")
+            return res_builder.build_error_message(f"Invalid credentials", 401)
+    
+    
     def update_password(self, login, old_password, new_password):
         user_data = self.fetch_user_data(login)
 
-        if(user_data):
-            if bu.verify_password(old_password, user_data['password']):
-                whisk_user = self.kube_client.get_whisk_user(user_data['login'])
+        if user_data:
+            if bu.verify_password(old_password, user_data["password"]):
+                whisk_user = self.kube_client.get_whisk_user(user_data["login"])
 
-                whisk_user['spec']['password'] = new_password
-                #whisk_user['spec']['password_timestamp'] = datetime.now().isoformat()
-                self.kube_client.update_whisk_user(whisk_user)                
+                whisk_user["spec"]["password"] = new_password
+                # whisk_user['spec']['password_timestamp'] = datetime.now().isoformat()
+                self.kube_client.update_whisk_user(whisk_user)
 
-                return res_builder.build_response_with_data({"status":"ok","message":"Password updated"})
+                return res_builder.build_response_with_data(
+                    {"status": "ok", "message": "Password updated"}
+                )
             else:
-                return res_builder.build_error_message(f"password mismatch for user {login}", 401)
+                return res_builder.build_error_message(
+                    f"password mismatch for user {login}", 401
+                )
         else:
-           return res_builder.build_error_message(f"no user {login} found", 401)           
+            return res_builder.build_error_message(f"no user {login} found", 401)
