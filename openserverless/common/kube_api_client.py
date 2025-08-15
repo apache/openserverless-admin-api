@@ -22,8 +22,8 @@ import os
 import logging
 
 from base64 import b64decode, b64encode
-from .validation import is_empty_arg
 
+from openserverless.common.utils import join_host_port
 from openserverless.config.app_config import AppConfig
 from openserverless.error.config_exception import ConfigException
 
@@ -31,16 +31,6 @@ SERVICE_HOST_ENV_NAME = "KUBERNETES_SERVICE_HOST"
 SERVICE_PORT_ENV_NAME = "KUBERNETES_SERVICE_PORT"
 SERVICE_TOKEN_FILENAME = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 SERVICE_CERT_FILENAME = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-
-
-def _join_host_port(host, port):
-    template = "%s:%s"
-    host_requires_bracketing = ":" in host or "%" in host
-    if host_requires_bracketing:
-        template = "[%s]:%s"
-    return template % (host, port)
-
-
 class KubeApiClient:
 
     def __init__(self, environ=os.environ):
@@ -50,11 +40,6 @@ class KubeApiClient:
         self._load_incluster_config()
 
     def _parse_b64(self, encoded_str):
-        """
-        Decode b64 encoded string
-        param: encoded_str a Base64 encoded string
-        return: decoded string
-        """
         try:
             return b64decode(encoded_str).decode()
         except:
@@ -73,7 +58,7 @@ class KubeApiClient:
         ):
             raise ConfigException("Service host/port is not set.")
 
-        self.host = "https://" + _join_host_port(
+        self.host = "https://" + join_host_port(
             self._environ.get(SERVICE_HOST_ENV_NAME),
             self._environ.get(SERVICE_PORT_ENV_NAME),
         )
@@ -254,7 +239,13 @@ class KubeApiClient:
             return None
     
     def post_config_map(self, cm_name, file_or_dir, namespace="nuvolaris"):
-        
+        """        
+        Create a ConfigMap from a file or directory.
+        :param cm_name: Name of the ConfigMap.
+        :param file_or_dir: Path to the file or directory containing the data.
+        :param namespace: Namespace where the ConfigMap will be created.
+        :return: The created ConfigMap or None if failed.
+        """
         if not os.path.exists(file_or_dir):
             raise ConfigException(f"File or directory {file_or_dir} does not exist.")
         
@@ -301,6 +292,12 @@ class KubeApiClient:
             return None
     
     def delete_config_map(self, cm_name, namespace="nuvolaris"):
+        """
+        Delete a ConfigMap by name.
+        :param cm_name: Name of the ConfigMap to delete.
+        :param namespace: Namespace where the ConfigMap is located.
+        :return: True if deletion was successful, False otherwise.
+        """
         url = f"{self.host}/api/v1/namespaces/{namespace}/configmaps/{cm_name}"
         headers = {"Authorization": self.token}
 
@@ -416,8 +413,14 @@ class KubeApiClient:
             logging.error(f"delete_secret {ex}")
             return False
 
-    # --- CREA JOB ---
-    def post_job(self, job_name, job_manifest, namespace="nuvolaris"):        
+    def post_job(self, job_name, job_manifest, namespace="nuvolaris"):
+        """
+        Create a Kubernetes job.
+        :param job_name: Name of the job.
+        :param job_manifest: Dictionary containing the job manifest. 
+        :param namespace: Namespace where the job will be created.
+        :return: The created job or None if failed.
+        """
         url = f"{self.host}/apis/batch/v1/namespaces/{namespace}/jobs"
         headers = {"Authorization": self.token}
         try:
@@ -437,8 +440,13 @@ class KubeApiClient:
             logging.error(f"post_job {ex}")
             return None
 
-    # --- OTTIENI POD ---
     def get_pod_by_job_name(self, job_name, namespace="nuvolaris"):
+        """
+        Get the pod name associated with a job by its name.
+        :param job_name: Name of the job.
+        :param namespace: Namespace where the job is located.
+        :return: The pod name if found, None otherwise.
+        """
         url = f"{self.host}/api/v1/namespaces/{namespace}/pods"
         headers = {"Authorization": self.token}
         try:
@@ -466,8 +474,12 @@ class KubeApiClient:
             logging.error(f"get_pod_by_job_name {ex}")
             return None
 
-    # --- LEGGI LOG POD ---
     def stream_pod_logs(self, pod_name, namespace="nuvolaris"):
+        """
+        Stream logs from a specific pod.
+        :param pod_name: Name of the pod to stream logs from.
+        :param namespace: Namespace where the pod is located.
+        """
         url = f"{self.host}/api/v1/namespaces/{namespace}/pods/{pod_name}/log?follow=true"
         headers = {"Authorization": self.token}
         with req.get(url, headers=headers, verify=self.ssl_ca_cert, stream=True) as r:
@@ -475,8 +487,13 @@ class KubeApiClient:
                 if line:
                     print(line.decode())
 
-    # --- CHECK STATUS JOB ---
     def check_job_status(self, job_name, namespace="nuvolaris"):
+        """
+        Check the status of a job by its name.
+        :param job_name: Name of the job to check.
+        :param namespace: Namespace where the job is located.
+        :return: True if the job has succeeded, False otherwise.
+        """
         url = f"{self.host}/apis/batch/v1/namespaces/{namespace}/jobs/{job_name}"
         headers = {"Authorization": self.token}
         try:

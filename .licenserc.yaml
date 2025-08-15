@@ -28,6 +28,7 @@ header:
     - 'LICENSE'
     - 'NOTICE'
     - 'DISCLAIMER'
+    - 'deploy/samples/requirements.txt'
     - '**/*.json'
     - '**/*.service'
     - '**/*.txt'

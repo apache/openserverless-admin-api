@@ -18,3 +18,4 @@
 #
 sudo sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
 sudo apt-get -y install curl wget jq
+pip install uv

@@ -34,3 +34,12 @@ jobs:
           submodules: recursive
       - name: License   
         uses: apache/skywalking-eyes@main
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+      - name: Setup
+        run: bash .github/cisetup.sh
+      - name: Unit Tests
+        run: task utest
+        continue-on-error: false

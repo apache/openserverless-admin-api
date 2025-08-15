@@ -33,7 +33,6 @@ class OpenwhiskAuthorize:
     def __init__(self, environ=os.environ):
         self._db = CouchDB()
         self._environ = environ
-        
 
     def encode(self, username, password):
         """Returns an HTTP basic authentication encrypted string given a valid
@@ -46,16 +45,36 @@ class OpenwhiskAuthorize:
         return f"Basic {b64encode(username_password.encode()).decode()}"
 
     def _parse_b64(self, encoded_str):
+        """
+        Parse a base64 encoded string and return the username and password.
+        If the string is not base64 encoded, it will try to split it by ':'.
+        Raises DecodeError if the string cannot be decoded or parsed.
+        >>> oa = OpenwhiskAuthorize()
+        >>> oa._parse_b64("dXNlcm5hbWU6cGFzc3dvcmQ=")
+        ('username', 'password')
+        >>> oa._parse_b64("username:password")
+        ('username', 'password')
+        >>> oa._parse_b64("invalid_base64_string")
+        Traceback (most recent call last):
+            ...
+        openserverless.error.api_error.DecodeError: authentication token does not seems to be b64 encoded
+        """
+        username = None
+        password = None
         try:
-            username, password = b64decode(encoded_str).decode().split(":", 1)
+            decoded = b64decode(encoded_str)
+
+            credentials = decoded.decode()
+            if credentials.count(":") != 1:
+                raise DecodeError("authentication token does not seems to be b64 encoded")
+            username, password = credentials.split(":", 1)
         except:
             # fallback in case the token is not bas64 encoded
-            username, password = encoded_str.split(":", 1)
+            if encoded_str.count(":") == 1:
+                username, password = encoded_str.split(":", 1)
 
-            if not username or not password:
-                raise DecodeError(
-                    "authentication token does not seems to be b64 encoded"
-                )
+        if not username or not password:
+            raise DecodeError("authentication token does not seems to be b64 encoded")
 
         return username, password
 
@@ -63,6 +82,15 @@ class OpenwhiskAuthorize:
         """Decode an encrypted HTTP basic authentication string. Returns a tuple of
         the form (username, password), and raises a DecodeError exception if
         nothing could be decoded.
+        >>> oa = OpenwhiskAuthorize()
+        >>> oa.decode("Basic dXNlcm5hbWU6cGFzc3dvcmQ=")
+        ('username', 'password')
+        >>> oa.decode("dXNlcm5hbWU6cGFzc3dvcmQ=")
+        ('username', 'password')
+        >>> oa.decode("invalid_base64_string")
+        Traceback (most recent call last):
+            ...
+        openserverless.error.api_error.DecodeError: authentication token does not seems to be b64 encoded
         """
         split = encoded_str.strip().split(" ")
 

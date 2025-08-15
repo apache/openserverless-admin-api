@@ -126,3 +126,12 @@ tasks:
         BASEIMG=$(task base-image-name)
         IMG="$BASEIMG:{{.TAG}}"
         kind load docker-image $IMG --name=nuvolaris
+
+  utest:
+    cmds:
+      - |
+        for test in openserverless/common/{{.T}}*.py
+        do  echo "*** [{{.KUBE}}] $test"
+            uv run python3 -m doctest -o ELLIPSIS $test {{.CLI_ARGS}}
+        done
+    silent: true
