@@ -1,0 +1,107 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+version: '3'
+
+tasks:
+  
+  send:
+    desc: Send the build to the server
+    vars:
+      AUTH:
+        sh: cat ~/.wskprops | grep "AUTH" | cut -d'=' -f2 | xargs -I {}
+    cmds:
+      - if test -z "{{.SOURCE}}"; then echo "SOURCE IS NOT SET" && exit 1; fi
+      - if test -z "{{.TARGET}}"; then echo "TARGET IS NOT SET" && exit 1; fi
+      - if test -z "{{.KIND}}"; then echo "KIND IS NOT SET" && exit 1; fi
+      - |
+        echo '{"source": "{{.SOURCE}}", "target": "{{.TARGET}}", "kind": "{{.KIND}}", "file": "{{.REQUIREMENTS}}" }' | \
+        curl -X POST $ADMIN_API_URL/api/v1/build -H "Content-Type: application/json" -H "Authorization: {{.AUTH}}" -d @-
+      - sleep 5
+      - task: logs
+    deps:
+      - cleanjobs
+      # - updatetoml
+    silent: true
+  
+  logs:
+    desc: Show logs of the last build job
+    cmds:
+      - kubectl -n nuvolaris logs $(kubectl get jobs.batch -o name | grep "build-") -c buildkit --follow
+    silent: false
+  
+  cleanjobs:
+    desc: Clean up old jobs
+    cmds:
+      - for I in $(kubectl get jobs -n nuvolaris | grep build | awk '{ print $1 }' | tr "\n" " "); do kubectl delete job $I; done
+      - for I in $(kubectl get cm -n nuvolaris | grep "cm-" | awk '{ print $1 }' | tr "\n" " "); do kubectl delete cm $I; done
+    silent: true
+  
+  updatetoml:
+    desc: Update the buildkitd.toml file config map
+    cmds:
+      - |
+        if test $(kubectl -n nuvolaris get cm -o name | grep nuvolaris-buildkitd-conf | wc -l) -gt 0; 
+          then kubectl -n nuvolaris delete configmap nuvolaris-buildkitd-conf
+        fi
+      - kubectl -n nuvolaris create configmap nuvolaris-buildkitd-conf --from-file=deploy/buildkit/buildkitd.toml
+    silent: true
+
+  list-catalogs:
+    desc: List catalogs in the registry
+    cmds:
+      - curl -u $REGISTRY_USER:$REGISTRY_PASS $REGISTRY_HOST/v2/_catalog
+    silent: false
+
+  list-images:
+    desc: List images in a specific catalog
+    vars:
+      CATALOG: '{{.CATALOG}}'
+    cmds:
+      - if test -z "{{.CATALOG}}"; then echo "CATALOG IS NOT SET" && exit 1; fi
+      - curl -u $REGISTRY_USER:$REGISTRY_PASS $REGISTRY_HOST/v2/{{.CATALOG}}/tags/list
+    silent: false
+  
+  get-image:
+    desc: Get an image from the registry
+    vars:
+      IMAGE: '{{.IMAGE}}'
+      IMAGE_NAME:
+        sh: echo '{{.IMAGE}}' | cut -d':' -f1
+      HASH:
+        sh: echo '{{.IMAGE}}' | cut -d':' -f2
+    cmds:
+      - echo "Getting image {{.IMAGE_NAME}} with hash {{.HASH}}"
+      - curl -u $REGISTRY_USER:$REGISTRY_PASS $REGISTRY_HOST/v2/{{.IMAGE_NAME}}/manifests/{{.HASH}}
+    silent: false
+
+  delete-image:
+    desc: Delete an image from the registry
+    vars:
+      IMAGE: '{{.IMAGE}}'
+      IMAGE_NAME:
+        sh: echo '{{.IMAGE}}' | cut -d':' -f1
+      HASH:
+        sh: echo '{{.IMAGE}}' | cut -d':' -f2
+      MANIFEST_DIGEST:
+        sh: curl --silent -u $REGISTRY_USER:$REGISTRY_PASS $REGISTRY_HOST/v2/{{.IMAGE_NAME}}/manifests/{{.HASH}} | grep -i 'Docker-Content-Digest:' | awk '{print $2}' | tr -d '\r'
+    cmds:
+      - echo 'Deleting image {{.IMAGE}}'
+      - echo "Deleting manifest {{.MANIFEST_DIGEST}} for image {{.IMAGE_NAME}}"
+      - curl -u $REGISTRY_USER:$REGISTRY_PASS -X DELETE $REGISTRY_HOST/v2/{{.IMAGE_NAME}}/manifests/{{.MANIFEST_DIGEST}}
+    silent: false

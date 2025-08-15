@@ -22,8 +22,9 @@ import openserverless.common.validation as validation
 import openserverless.common.response_builder as res_builder
 from openserverless.common.kube_api_client import KubeApiClient
 
+
 class UserValidation:
-    
+
     def __init__(self, environ=os.environ):
         self._environ = environ
         self._kube_client = KubeApiClient()
@@ -36,16 +37,26 @@ class UserValidation:
 
         try:
             if not validation.is_valid_username(namespace):
-                return res_builder.build_error_message(message=f"Account namespace {namespace} is not valid. ", status_code=400)
-            
-            #check that there is no wsk user already existing with the same namespace
+                return res_builder.build_error_message(
+                    message=f"Account namespace {namespace} is not valid. ",
+                    status_code=400,
+                )
+
+            # check that there is no wsk user already existing with the same namespace
             existing_whisk_user = self._kube_client.get_whisk_user(namespace)
 
             if existing_whisk_user:
-                return res_builder.build_error_message(message=f"Namespace {namespace} already exists on domain.", status_code=409)
+                return res_builder.build_error_message(
+                    message=f"Namespace {namespace} already exists on domain.",
+                    status_code=409,
+                )
 
-            return res_builder.build_response_message(f"Username {namespace} is valid and available")
+            return res_builder.build_response_message(
+                f"Username {namespace} is valid and available"
+            )
         except Exception as ex:
             logging.error(ex)
 
-        return res_builder.build_response_message("Un-expected error detected attempting to setup you free account. If problem persists please get in touch with us info@nuvolaris.io")
+        return res_builder.build_response_message(
+            "Un-expected error detected attempting to setup you free account. If problem persists please get in touch with us info@nuvolaris.io"
+        )

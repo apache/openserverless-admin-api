@@ -27,32 +27,14 @@ vars:
 
 dotenv:
  - .env  
-  
+
+includes:
+  builder:
+    taskfile: TaskfileBuilder.yml
+  dev:
+    taskfile: TaskfileDev.yml
+
 tasks:
-
-  get-tokens:
-    desc: "Get Service Account tokens and save them to tokens directory"
-    silent: true
-    cmds:
-      - mkdir -p tokens
-      - kubectl get secret nuvolaris-wsku-secret -o jsonpath='{.data.token}' | base64 --decode > tokens/token
-      - kubectl get secret nuvolaris-wsku-secret -o jsonpath='{.data.ca\.crt}' | base64 --decode > tokens/ca.crt
-
-  setup-developer:
-    desc: "Setup developer environment"
-    silent: true
-    cmds:
-      - task: get-tokens
-      - |
-        if [ ! -f .env ]; 
-        then cp .env.example .env
-          echo "Please edit .env file with your local CouchDB and Kubernetes credentials"
-        fi
-      - |
-        if [ ! -d .venv ];
-        then uv venv
-        fi
-      - uv pip install -r pyproject.toml 2>/dev/null 
 
   docker-login-ghcr: >
     silent: true
@@ -145,8 +127,11 @@ tasks:
         IMG="$BASEIMG:{{.TAG}}"
         kind load docker-image $IMG --name=nuvolaris
 
-  run:
-    desc: |
-      Run the admin api locally, using configuration from .env file
+  utest:
     cmds:
-      - uv run -m openserverless
+      - |
+        for test in openserverless/common/{{.T}}*.py
+        do  echo "*** [{{.KUBE}}] $test"
+            uv run python3 -m doctest -o ELLIPSIS $test {{.CLI_ARGS}}
+        done
+    silent: true

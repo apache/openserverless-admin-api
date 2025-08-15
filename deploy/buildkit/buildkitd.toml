@@ -1,4 +1,3 @@
-#!/bin/bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,6 +15,27 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-sudo sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
-sudo apt-get -y install curl wget jq
-pip install uv
+# =========================
+# Worker OCI (rootlesskit)
+# =========================
+[worker.oci]
+  enabled = true
+  rootless = true
+  no-process-sandbox = true
+  snapshotter = "overlayfs"   # usa overlayfs se il kernel lo consente
+
+[worker.containerd]
+  enabled = false
+
+# =========================
+# Registry HTTP insicuro
+# =========================
+[registry."nuvolaris-registry-svc:5000"]
+  insecure = true
+  http = true
+
+# =========================
+# Logging
+# =========================
+[log]
+  level = "debug"

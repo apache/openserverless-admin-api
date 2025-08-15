@@ -21,6 +21,20 @@ import re
 def is_valid_username(username):
     """
     Verifies the given username follows nuvolaris rule
+    >>> is_valid_username("bruno")
+    True
+    >>> is_valid_username("bruno123")
+    True
+    >>> is_valid_username("bruno-123")
+    False
+    >>> is_valid_username("bruno_123")
+    False
+    >>> is_valid_username("bruno@123")
+    False
+    >>> is_valid_username("bruno 123")
+    False
+    >>> is_valid_username("brun")
+    False
     """
     pat = re.compile(r"^[a-z0-9]{5,60}(?:[a-z0-9])?$")
     if re.fullmatch(pat, username):
@@ -35,6 +49,10 @@ def is_empty_arg(args, arg_name):
     param: args
     param: arg_name
     return: True if the argument is not contained in the input args array or if it is an empty string value
+    >>> is_empty_arg({"arg1": "value1"}, "arg1")
+    False
+    >>> is_empty_arg({"arg1": "value1"}, "arg2")
+    True
     """
 
     if arg_name not in args:

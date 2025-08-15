@@ -34,10 +34,15 @@ Available APIs at the moment:
 
 `PATCH /system/api/v1/auth/{login}` - Update the user password patching the corresponding wsku/\<login\> entry.
 
+### Build API
+
+`POST /system/api/v1/build` - Perform the build of a custom image and push it to repository.
+
+More informations [Here](docs/DEPLOYER.md)
+
 ### Info API
 
 `GET /system/info` - Info endpoint
-
 
 ## Developer instructions
 
@@ -45,7 +50,7 @@ You need to have access to be Apache OpenServerless admin and have access to kub
 
 Refer to the [Apache OpenServerless installation page](https://openserverless.apache.org/docs/installation/install/docker/): 
 
-Give the command `task setup-developer` and it will:
+Give the command `task dev:setup-developer` and it will:
 
 - extract the required ca.crt and token from operator service account
 - copy a sample .env file
@@ -61,14 +66,22 @@ Open http://localhost:5002/system/apidocs/ to see the API documentation.
 Taskfile supports the following tasks:
 
 ```yaml
-* build:                 Build the image locally
-* build-and-load:        Build the image and loads it to local Kind cluster
-* buildx:                Build the docker image using buildx. Set PUSH=1 to push the image to the registry. 
-* docker-login:          Login to the docker registry. Set REGISTRY=ghcr or REGISTRY=dockerhub in .env to use the respective registry. 
-* get-tokens:            Get Service Account tokens and save them to tokens directory
-* image-tag:             Create a new tag for the current git commit.       
-* run:                   Run the admin api locally, using configuration from .env file 
-* setup-developer:       Setup developer environment
+* build:                       Build the image locally
+* build-and-load:              Build the image and loads it to local Kind cluster
+* buildx:                      Build the docker image using buildx. Set PUSH=1 to push the image to the registry. 
+* docker-login:                Login to the docker registry. Set REGISTRY=ghcr or REGISTRY=dockerhub in .env to use the respective registry. 
+* image-tag:                   Create a new tag for the current git commit.       
+* builder:cleanjobs:           Clean up old jobs
+* builder:delete-image:        Delete an image from the registry
+* builder:get-image:           Get an image from the registry
+* builder:list-catalogs:       List catalogs in the registry
+* builder:list-images:         List images in a specific catalog
+* builder:logs:                Show logs of the last build job
+* builder:send:                Send the build to the server
+* builder:updatetoml:          Update the buildkitd.toml file config map
+* dev:get-tokens:              Get Service Account tokens and save them to tokens directory
+* dev:run:                     Run the admin api locally, using configuration from .env file 
+* dev:setup-developer:         Setup developer environment
 ```
 
 ## Build and push
@@ -129,3 +142,7 @@ $ git push apache 0.1.0-incubating.2507270910
 
 This will trigger the build workflow, and the process will be visible at
 https://github.com/apache/openserverless-admin-api/actions
+
+## Additional Documentation
+
+- [Deployer](docs/DEPLOYER.md)

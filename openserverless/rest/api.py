@@ -17,10 +17,7 @@
 #
 
 from openserverless import app
-from http import HTTPStatus
-
 import openserverless.common.response_builder as res_builder
-
 
 @app.route('/system/info')
 def info():
