@@ -128,7 +128,7 @@ $ task buildx PUSH=1
 ```
 
 ### Apache repository
-To build an official Apache OpensSrverless Admin Api image, you
+To build an official Apache OpenServerless Admin Api image, you
 need to be a committer.
 
 If you have the proper permissions, the build process will start pushing a
