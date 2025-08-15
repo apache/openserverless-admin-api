@@ -35,7 +35,7 @@ def password(login, **kwargs):
     summary: Login an OpenServerless user using login/password payload
     operationId: patchOpsUser
     security:
-        - openwhiskBasicAuth: []    
+        - openwhiskBasicAuth: []
     consumes:
         - application/json
     definitions:

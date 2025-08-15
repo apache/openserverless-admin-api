@@ -79,4 +79,5 @@ listen_port = os.environ.get("LISTEN_PORT", "5000")
 
 import openserverless.rest.api
 import openserverless.rest.auth
+import openserverless.rest.build
 

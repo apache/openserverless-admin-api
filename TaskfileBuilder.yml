@@ -30,7 +30,8 @@ tasks:
       - if test -z "{{.TARGET}}"; then echo "TARGET IS NOT SET" && exit 1; fi
       - if test -z "{{.KIND}}"; then echo "KIND IS NOT SET" && exit 1; fi
       - |
-        echo '{"source": "{{.SOURCE}}", "target": "{{.TARGET}}", "kind": "{{.KIND}}", "file": "{{.REQUIREMENTS}}" }' | http POST $ADMIN_API_URL/system/build Content-Type:application/json Authorization:"{{.AUTH}}"
+        echo '{"source": "{{.SOURCE}}", "target": "{{.TARGET}}", "kind": "{{.KIND}}", "file": "{{.REQUIREMENTS}}" }' | \
+        curl -X POST $ADMIN_API_URL/api/v1/build -H "Content-Type: application/json" -H "Authorization: {{.AUTH}}" -d @-
       - sleep 5
       - task: logs
     deps:
@@ -64,7 +65,7 @@ tasks:
   list-catalogs:
     desc: List catalogs in the registry
     cmds:
-      - http -a $REGISTRY_USER:$REGISTRY_PASS GET "${REGISTRY_HOST}/v2/_catalog"
+      - curl -u $REGISTRY_USER:$REGISTRY_PASS $REGISTRY_HOST/v2/_catalog
     silent: false
 
   list-images:
@@ -73,7 +74,7 @@ tasks:
       CATALOG: '{{.CATALOG}}'
     cmds:
       - if test -z "{{.CATALOG}}"; then echo "CATALOG IS NOT SET" && exit 1; fi
-      - http -a $REGISTRY_USER:$REGISTRY_PASS GET "${REGISTRY_HOST}/v2/{{.CATALOG}}/tags/list"
+      - curl -u $REGISTRY_USER:$REGISTRY_PASS $REGISTRY_HOST/v2/{{.CATALOG}}/tags/list
     silent: false
   
   get-image:
@@ -86,7 +87,7 @@ tasks:
         sh: echo '{{.IMAGE}}' | cut -d':' -f2
     cmds:
       - echo "Getting image {{.IMAGE_NAME}} with hash {{.HASH}}"
-      - http -a $REGISTRY_USER:$REGISTRY_PASS GET "${REGISTRY_HOST}/v2/{{.IMAGE_NAME}}/manifests/{{.HASH}}"
+      - curl -u $REGISTRY_USER:$REGISTRY_PASS $REGISTRY_HOST/v2/{{.IMAGE_NAME}}/manifests/{{.HASH}}
     silent: false
 
   delete-image:
@@ -98,9 +99,9 @@ tasks:
       HASH:
         sh: echo '{{.IMAGE}}' | cut -d':' -f2
       MANIFEST_DIGEST:
-        sh: http --headers -a $REGISTRY_USER:$REGISTRY_PASS GET "${REGISTRY_HOST}/v2/{{.IMAGE_NAME}}/manifests/{{.HASH}}" | grep -i 'Docker-Content-Digest:' | awk '{print $2}' | tr -d '\r'
+        sh: curl --silent -u $REGISTRY_USER:$REGISTRY_PASS $REGISTRY_HOST/v2/{{.IMAGE_NAME}}/manifests/{{.HASH}} | grep -i 'Docker-Content-Digest:' | awk '{print $2}' | tr -d '\r'
     cmds:
       - echo 'Deleting image {{.IMAGE}}'
       - echo "Deleting manifest {{.MANIFEST_DIGEST}} for image {{.IMAGE_NAME}}"
-      - http -a $REGISTRY_USER:$REGISTRY_PASS DELETE "${REGISTRY_HOST}/v2/{{.IMAGE_NAME}}/manifests/{{.MANIFEST_DIGEST}}"
+      - curl -u $REGISTRY_USER:$REGISTRY_PASS -X DELETE $REGISTRY_HOST/v2/{{.IMAGE_NAME}}/manifests/{{.MANIFEST_DIGEST}}
     silent: false

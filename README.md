@@ -36,7 +36,7 @@ Available APIs at the moment:
 
 ### Build API
 
-`POST /system/api/build` - Perform the build of a custom image and push it to repository.
+`POST /system/api/v1/build` - Perform the build of a custom image and push it to repository.
 
 More informations [Here](docs/DEPLOYER.md)
 
