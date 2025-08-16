@@ -19,48 +19,74 @@ import shutil
 from openserverless.common.kube_api_client import KubeApiClient
 import os
 import uuid
+import logging
+from datetime import datetime, timezone, timedelta
+from types import SimpleNamespace
 
 JOB_NAME = "build"
 CM_NAME = "cm"
 
-
 class BuildService:
-    def __init__(self, build_config, user_env=None):
-        self.build_config = build_config
+    """
+    BuildService is responsible for managing the build process in a Kubernetes environment.
+    It handles the creation of Dockerfiles, ConfigMaps, and Kubernetes Jobs to build Docker images
+    based on the provided build configuration.
+    """
 
+    def __init__(self, user_env=None):
         # A super userful Kube Api Client
-        self.kube_client = KubeApiClient()
+        self.kube_client = KubeApiClient()       
         
         # generate a unique ID for the build
         self.id = str(uuid.uuid4())
 
-        # define a unique ConfigMap and Job name based on the ID
-        self.cm = f"{CM_NAME}-{self.id}"
-        self.job_name = f"{JOB_NAME}-{self.id}"
-
         # user environment variables
         self.user_env = user_env if user_env is not None else {}
 
+        self.user = self.user_env.get('wsk_user_name', '')
+
+        # define a unique ConfigMap and Job name based on the ID
+        if len(self.user) > 0:
+            self.cm = f"{CM_NAME}-{self.user}-{self.id}"
+            self.job_name = f"{JOB_NAME}-{self.user}-{self.id}"
+        else:
+            self.cm = f"{CM_NAME}-{self.id}"
+            self.job_name = f"{JOB_NAME}-{self.id}"
+        
         # define registry host
         self.registry_host = self.get_registry_host()
+        logging.info(f"Using registry host: {self.registry_host}")
 
-        self.init()
+        # define registry auth
+        self.registry_auth = self.get_registry_auth()
+        logging.info(f"Using registry auth: {self.registry_auth}")
+
+        # define demo mode
+        self.demo_mode = int(os.environ.get("DEMO_MODE", 0)) == 1
+        logging.info(f"Using demo mode: {self.demo_mode}")
     
-    def init(self):
+    def init(self, build_config: dict):
         """
         Initialize the build service by creating the necessary ConfigMap.
         """
+        logging.info("Initializing BuildService")
+        
+        self.build_config = build_config
 
         # install the nuvolaris-buildkitd-conf ConfigMap if not present
-        cm = self.kube_client.get_config_map("nuvolaris-buildkitd-conf", namespace="nuvolaris")
+        cm = self.kube_client.get_config_map("nuvolaris-buildkitd-conf")
         if cm is None:
-            self.kube_client.post_config_map(
+            logging.info("Adding nuvolaris-buildkitd-conf ConfigMap")
+            status = self.kube_client.post_config_map(
                 cm_name="nuvolaris-buildkitd-conf",
                 file_or_dir="deploy/buildkit/buildkitd.toml",
                 namespace="nuvolaris",
             )
+            if status is None:
+                logging.error("Failed to create nuvolaris-buildkitd-conf ConfigMap")
 
-    def get_registry_host(self):
+    
+    def get_registry_host(self) -> str:
         """
         Retrieve the registry host 
         - firstly, check if the user environment has a registry host set
@@ -77,9 +103,19 @@ class BuildService:
                 annotations = ops_config_map['metadata']['annotations']
                 if 'registry_host' in annotations:
                     registry_host = annotations['registry_host']
-
-        return registry_host
         
+        return registry_host
+    
+    def get_registry_auth(self) -> str:
+        """
+        Get the name of the registry auth secret. If the user environment has a registry auth set, use it.
+        Otherwise, use the default 'registry-pull-secret'.
+        """
+        if (self.user_env.get('REGISTRY_SECRET') is not None):
+            return self.build_config.get('REGISTRY_SECRET')
+        
+
+        return 'registry-pull-secret'
 
     def create_docker_file(self) -> str:
         """
@@ -91,7 +127,11 @@ class BuildService:
         if 'file' in self.build_config:
             requirement_file = self.get_requirements_file_from_kind()
             dockerfile_content += f"COPY ./{requirement_file} /tmp/{requirement_file}\n"
-        dockerfile_content += "RUN echo \"/bin/extend\"\n"
+        if self.demo_mode:
+            dockerfile_content += "RUN echo \"/bin/extend\"\n"
+        else:
+            dockerfile_content += "RUN \"/bin/extend\"\n"
+
         return dockerfile_content
     
     def get_requirements_file_from_kind(self) -> str:
@@ -123,48 +163,111 @@ class BuildService:
         """
         import tempfile
         import base64
+        
+        # firstly remove old build jobs
+        self.delete_old_build_jobs()
 
         tmpdirname = tempfile.mkdtemp()
+        logging.info(f"Starting the build to: {tmpdirname}")
         if 'file' in self.build_config:
+            logging.info("Decoding the requirements file from base64")
             # decode base64 self.build_config.get('file')
-            requirements = base64.b64decode(self.build_config.get('file')).decode('utf-8')
+            try:
+                requirements = base64.b64decode(self.build_config.get('file')).decode('utf-8')
             
-            requirement_file = self.get_requirements_file_from_kind()
-            with open(os.path.join(tmpdirname, requirement_file), 'w') as f:
-                f.write(requirements)
+                requirement_file = self.get_requirements_file_from_kind()
+                with open(os.path.join(tmpdirname, requirement_file), 'w') as f:
+                    f.write(requirements)
+            
+            except Exception as e:
+                logging.error(f"Failed to decode the requirements file: {e}")
+                return None    
         
         dockerfile_path = os.path.join(tmpdirname, "Dockerfile")
+        logging.info(f"Creating Dockerfile at: {dockerfile_path}")
         with open(dockerfile_path, "w") as dockerfile:
             dockerfile.write(self.create_docker_file())
         
-        # check if the unzipped directory contains a Dockerfile and is not empty.
-        if not self.check_unzip_dir(tmpdirname):
+        # check if the directory contains a Dockerfile and is not empty.
+        if not self.check_build_dir(tmpdirname):
             return None
 
         # Create a ConfigMap for the build context
+        logging.info(f"Creating ConfigMap {self.cm} with build context")
         cm = self.kube_client.post_config_map(
             cm_name=self.cm,
             file_or_dir=tmpdirname,
-            namespace="nuvolaris",
         )
 
+        logging.info(f"Removing temporary build directory: {tmpdirname}")
         shutil.rmtree(tmpdirname)
 
         if not cm:
             return None
 
-        # retrieve credentials to access the registry
-        #
-
+        logging.info(f"ConfigMap {self.cm} created successfully")
         job_template = self.create_build_job(image_name)
-        job = self.kube_client.post_job(self.job_name, job_template)
+        job = self.kube_client.post_job(job_template)
         if not job:
+            logging.error(f"Failed to create job {self.job_name}")
             return None
+        
+        if not self.kube_client.delete_config_map(cm_name=self.cm):
+            logging.error(f"Failed to delete ConfigMap {self.cm}")
 
         return job
+    
+    def delete_old_build_jobs(self, max_age_hours: int = 24) -> int:
+        name_filter = f"build-{self.user}-" if self.user else "build"        
+        jobs = self.kube_client.get_jobs(name_filter=name_filter)
+
+        try:
+            cutoff_time = datetime.now(timezone.utc) - timedelta(hours=max_age_hours)
+            count = 0
+
+            for j in jobs:
+                job = SimpleNamespace(**j)
+                metadata = SimpleNamespace(**job.metadata)
+                status = SimpleNamespace(**job.status)
+                
+                if not metadata or not status:
+                    continue
+
+                job_name = metadata.name
+
+                completed = False
+                # Check if job is completed
+                for c in status.conditions:
+                    condition = SimpleNamespace(**c)
+                    if condition.type == "Complete" and condition.status == "True":
+                        completed = True
+                        break
+
+                if not completed:
+                    continue
+
+                # Check completion time
+                completion_time = status.completionTime
+                if not completion_time:
+                    continue
+                job_completion_time = datetime.strptime(completion_time,"%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+
+                if job_completion_time < cutoff_time:
+                    logging.info (f"Deleting job {job_name} (completed at {completion_time})")
+                    status = self.kube_client.delete_job(job_name=job_name)
+                    if not status:
+                        logging.error(f"Failed to delete job {job_name}")
+                    else:
+                        count+=1
+                        logging.info(f"Job {job_name} deleted successfully")
+            
+            return count
+        except Exception as e:
+            logging.error(f"Error deleting old build jobs: {e}")
+            return -1
 
     
-    def check_unzip_dir(self, unzip_dir: str) -> bool:
+    def check_build_dir(self, unzip_dir: str) -> bool:
         """
         Check if the unzipped directory contains a Dockerfile and is not empty."""
         if not os.path.exists(unzip_dir):
@@ -208,7 +311,7 @@ class BuildService:
                             {
                                 "name": "docker-config",
                                 "secret": {
-                                    "secretName": "registry-pull-secret",
+                                    "secretName": self.registry_auth,
                                     "items": [
                                         {
                                             "key": ".dockerconfigjson",

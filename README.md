@@ -36,7 +36,9 @@ Available APIs at the moment:
 
 ### Build API
 
-`POST /system/api/v1/build` - Perform the build of a custom image and push it to repository.
+`POST /system/api/v1/build/start` - Perform the build of a custom image and push it to repository.
+
+`POST /system/api/v1/build/cleanup` - Perform cleanup of build jobs older than 24 hours (or different number of hours if otherwise specified)
 
 More informations [Here](docs/DEPLOYER.md)
 
@@ -71,6 +73,7 @@ Taskfile supports the following tasks:
 * buildx:                      Build the docker image using buildx. Set PUSH=1 to push the image to the registry. 
 * docker-login:                Login to the docker registry. Set REGISTRY=ghcr or REGISTRY=dockerhub in .env to use the respective registry. 
 * image-tag:                   Create a new tag for the current git commit.       
+* builder:clean:               Cleanup old build jobs via api
 * builder:cleanjobs:           Clean up old jobs
 * builder:delete-image:        Delete an image from the registry
 * builder:get-image:           Get an image from the registry

@@ -31,7 +31,7 @@ tasks:
       - if test -z "{{.KIND}}"; then echo "KIND IS NOT SET" && exit 1; fi
       - |
         echo '{"source": "{{.SOURCE}}", "target": "{{.TARGET}}", "kind": "{{.KIND}}", "file": "{{.REQUIREMENTS}}" }' | \
-        curl -X POST $ADMIN_API_URL/api/v1/build -H "Content-Type: application/json" -H "Authorization: {{.AUTH}}" -d @-
+        curl -X POST $ADMIN_API_URL/api/v1/build/start -H "Content-Type: application/json" -H "Authorization: {{.AUTH}}" -d @-
       - sleep 5
       - task: logs
     deps:
@@ -39,6 +39,24 @@ tasks:
       # - updatetoml
     silent: true
   
+  clean:
+    desc: Cleanup old build jobs via api
+    vars:
+      AUTH:
+        sh: cat ~/.wskprops | grep "AUTH" | cut -d'=' -f2 | xargs -I {}
+      MAX_AGE_HOURS:
+        sh: |
+          if test -z "{{.MAX_AGE_HOURS}}"; 
+          then echo "24";
+          else echo "{{.MAX_AGE_HOURS}}"; 
+          fi        
+    cmds:
+      - |
+        echo '{"max_age_hours": "{{.MAX_AGE_HOURS}}" }' | \
+        curl -X POST $ADMIN_API_URL/api/v1/build/cleanup -H "Content-Type: application/json" -H "Authorization: {{.AUTH}}" -d @-      
+    silent: false
+
+
   logs:
     desc: Show logs of the last build job
     cmds:
@@ -66,7 +84,7 @@ tasks:
     desc: List catalogs in the registry
     cmds:
       - curl -u $REGISTRY_USER:$REGISTRY_PASS $REGISTRY_HOST/v2/_catalog
-    silent: false
+    silent: true
 
   list-images:
     desc: List images in a specific catalog
@@ -75,7 +93,7 @@ tasks:
     cmds:
       - if test -z "{{.CATALOG}}"; then echo "CATALOG IS NOT SET" && exit 1; fi
       - curl -u $REGISTRY_USER:$REGISTRY_PASS $REGISTRY_HOST/v2/{{.CATALOG}}/tags/list
-    silent: false
+    silent: true
   
   get-image:
     desc: Get an image from the registry

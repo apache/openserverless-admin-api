@@ -118,7 +118,7 @@ class KubeApiClient:
             logging.error("create_whisk_user %s", ex)
             return False
 
-    def delete_whisk_user(self, username, namespace="nuvolaris"):
+    def delete_whisk_user(self, username: str, namespace="nuvolaris"):
         """ "
         Delete a whisk user using a DELETE operation
         param: username of the whisksusers resource to delete
@@ -147,7 +147,7 @@ class KubeApiClient:
             logging.error(f"delete_whisk_user {ex}")
             return False
 
-    def get_whisk_user(self, username, namespace="nuvolaris"):
+    def get_whisk_user(self, username: str, namespace="nuvolaris"):
         """ "
         Get a whisk user using a GET operation
         param: username of the whisksusers resource to delete
@@ -210,7 +210,7 @@ class KubeApiClient:
             logging.error(f"update_whisk_user {ex}")
             return False
         
-    def get_config_map(self, cm_name, namespace="nuvolaris"):
+    def get_config_map(self, cm_name: str, namespace="nuvolaris"):
         """
         Get a ConfigMap by name.
         :param cm_name: Name of the ConfigMap.
@@ -238,7 +238,7 @@ class KubeApiClient:
             logging.error(f"get_config_map {ex}")
             return None
     
-    def post_config_map(self, cm_name, file_or_dir, namespace="nuvolaris"):
+    def post_config_map(self, cm_name: str, file_or_dir: str, namespace="nuvolaris"):
         """        
         Create a ConfigMap from a file or directory.
         :param cm_name: Name of the ConfigMap.
@@ -291,7 +291,7 @@ class KubeApiClient:
             logging.error(f"post_config_map {ex}")
             return None
     
-    def delete_config_map(self, cm_name, namespace="nuvolaris"):
+    def delete_config_map(self, cm_name: str, namespace="nuvolaris"):
         """
         Delete a ConfigMap by name.
         :param cm_name: Name of the ConfigMap to delete.
@@ -320,7 +320,7 @@ class KubeApiClient:
             logging.error(f"delete_config_map {ex}")
             return False
      
-    def get_secret(self, secret_name, namespace="nuvolaris"):
+    def get_secret(self, secret_name: str, namespace="nuvolaris"):
         """
         Get a Kubernetes secret by name.
         :param secret_name: Name of the secret.
@@ -348,7 +348,7 @@ class KubeApiClient:
             logging.error(f"get_secret {ex}")
             return None
     
-    def post_secret(self, secret_name, secret_data, namespace="nuvolaris"):
+    def post_secret(self, secret_name: str, secret_data: dict, namespace="nuvolaris"):
         """
         Create a Kubernetes secret.
         :param secret_name: Name of the secret.
@@ -385,7 +385,7 @@ class KubeApiClient:
             logging.error(f"post_secret {ex}")
             return None
     
-    def delete_secret(self, secret_name, namespace="nuvolaris"):
+    def delete_secret(self, secret_name: str, namespace="nuvolaris"):
         """
         Delete a Kubernetes secret.
         :param secret_name: Name of the secret to delete.
@@ -412,11 +412,70 @@ class KubeApiClient:
         except Exception as ex:
             logging.error(f"delete_secret {ex}")
             return False
+        
+    def get_jobs(self, name_filter: str = None, namespace="nuvolaris"):
+        """
+        Get all Kubernetes jobs in a specific namespace.
+        :param namespace: Namespace to list jobs from.
+        :return: List of jobs or None if failed.
+        """
+        url = f"{self.host}/apis/batch/v1/namespaces/{namespace}/jobs"
+        headers = {"Authorization": self.token}
+        try:
+            logging.info(f"GET request to {url}")
+            response = req.get(url, headers=headers, verify=self.ssl_ca_cert)
 
-    def post_job(self, job_name, job_manifest, namespace="nuvolaris"):
+            if response.status_code in [200, 202]:
+                logging.debug(
+                    f"GET to {url} succeeded with {response.status_code}. Body {response.text}"
+                )
+
+                if name_filter:
+                    jobs = json.loads(response.text)["items"]
+                    filtered_jobs = [job for job in jobs if name_filter in job["metadata"]["name"]]
+                    return filtered_jobs
+
+                return json.loads(response.text)["items"]
+
+            logging.error(
+                f"GET to {url} failed with {response.status_code}. Body {response.text}"
+            )
+            return None
+        except Exception as ex:
+            logging.error(f"get_jobs {ex}")
+            return None
+        
+    def delete_job(self, job_name: str, namespace="nuvolaris"):
+        """
+        Delete a Kubernetes job by name.
+        :param job_name: Name of the job to delete.
+        :param namespace: Namespace where the job is located.
+        :return: True if deletion was successful, False otherwise.
+        """
+        url = f"{self.host}/apis/batch/v1/namespaces/{namespace}/jobs/{job_name}"
+        headers = {"Authorization": self.token}
+
+        try:
+            logging.info(f"DELETE request to {url}")
+            response = req.delete(url, headers=headers, verify=self.ssl_ca_cert)
+
+            if response.status_code in [200, 202]:
+                logging.debug(
+                    f"DELETE to {url} succeeded with {response.status_code}. Body {response.text}"
+                )
+                return True
+
+            logging.error(
+                f"DELETE to {url} failed with {response.status_code}. Body {response.text}"
+            )
+            return False
+        except Exception as ex:
+            logging.error(f"delete_job {ex}")
+            return False
+
+    def post_job(self, job_manifest: json, namespace="nuvolaris"):
         """
         Create a Kubernetes job.
-        :param job_name: Name of the job.
         :param job_manifest: Dictionary containing the job manifest. 
         :param namespace: Namespace where the job will be created.
         :return: The created job or None if failed.
@@ -440,7 +499,7 @@ class KubeApiClient:
             logging.error(f"post_job {ex}")
             return None
 
-    def get_pod_by_job_name(self, job_name, namespace="nuvolaris"):
+    def get_pod_by_job_name(self, job_name: str, namespace="nuvolaris"):
         """
         Get the pod name associated with a job by its name.
         :param job_name: Name of the job.
@@ -474,7 +533,7 @@ class KubeApiClient:
             logging.error(f"get_pod_by_job_name {ex}")
             return None
 
-    def stream_pod_logs(self, pod_name, namespace="nuvolaris"):
+    def stream_pod_logs(self, pod_name: str, namespace="nuvolaris"):
         """
         Stream logs from a specific pod.
         :param pod_name: Name of the pod to stream logs from.
@@ -487,7 +546,7 @@ class KubeApiClient:
                 if line:
                     print(line.decode())
 
-    def check_job_status(self, job_name, namespace="nuvolaris"):
+    def check_job_status(self, job_name: str, namespace="nuvolaris"):
         """
         Check the status of a job by its name.
         :param job_name: Name of the job to check.
