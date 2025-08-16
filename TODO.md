@@ -20,10 +20,12 @@
 # TODO
 
 ## Tests
-Add integration and unit tests
+- [ ] Add integration tests
+- [X] Add unit tests
+- [ ] Add more unit tests
 
 ## Various
 
 - [ ] `openserverless.common.whis_user_data.py` - Add `with_` blocks for other new OpenServerless Services
 - [ ] `openserverless.common.whisk_user_generator` - Check if `generate_whisk_user_yaml` is complete
-- [ ] cleanup config maps and builds
+- [X] cleanup config maps and builds
