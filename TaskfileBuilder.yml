@@ -117,7 +117,7 @@ tasks:
       HASH:
         sh: echo '{{.IMAGE}}' | cut -d':' -f2
       MANIFEST_DIGEST:
-        sh: curl --silent -u $REGISTRY_USER:$REGISTRY_PASS $REGISTRY_HOST/v2/{{.IMAGE_NAME}}/manifests/{{.HASH}} | grep -i 'Docker-Content-Digest:' | awk '{print $2}' | tr -d '\r'
+        sh: curl -u $REGISTRY_USER:$REGISTRY_PASS -s -D - -o /dev/null $REGISTRY_HOST/v2/{{.IMAGE_NAME}}/manifests/{{.HASH}} | grep -i 'Docker-Content-Digest:' | awk '{print $2}' | tr -d '\r'
     cmds:
       - echo 'Deleting image {{.IMAGE}}'
       - echo "Deleting manifest {{.MANIFEST_DIGEST}} for image {{.IMAGE_NAME}}"

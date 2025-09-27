@@ -33,6 +33,29 @@ SERVICE_TOKEN_FILENAME = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 SERVICE_CERT_FILENAME = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 class KubeApiClient:
 
+    @staticmethod
+    def build_dockerconfigjson(username: str, password: str, registry: str = "https://index.docker.io/v1/") -> str:
+        """
+        Crea una stringa .dockerconfigjson per un secret docker-registry.
+        :param username: Username del registry
+        :param password: Password del registry
+        :param registry: URL del registry (default Docker Hub)
+        :return: Stringa JSON da usare come valore per .dockerconfigjson
+        """
+        import base64
+        import json as _json
+        auth = base64.b64encode(f"{username}:{password}".encode()).decode()
+        dockerconfig = {
+            "auths": {
+                registry: {
+                    "auth": auth,
+                    "username": username,
+                    "password": password
+                }
+            }
+        }
+        return _json.dumps(dockerconfig)
+
     def __init__(self, environ=os.environ):
         self._environ = environ
         self.SERVICE_TOKEN_FILENAME = self._environ.get("KUBERNETES_TOKEN_FILENAME") or SERVICE_TOKEN_FILENAME
@@ -348,23 +371,39 @@ class KubeApiClient:
             logging.error(f"get_secret {ex}")
             return None
     
-    def post_secret(self, secret_name: str, secret_data: dict, namespace="nuvolaris"):
+    def post_secret(self, secret_name: str, secret_data: dict, type: str="Opaque", namespace="nuvolaris"):
         """
         Create a Kubernetes secret.
         :param secret_name: Name of the secret.
         :param secret_data: Dictionary containing the secret data.
+        :param type: Type of the secret (Opaque, kubernetes.io/dockerconfigjson, kubernetes.io/tls)
         :param namespace: Namespace where the secret will be created.
         :return: The created secret or None if failed.
         """
         url = f"{self.host}/api/v1/namespaces/{namespace}/secrets"
         headers = {"Authorization": self.token, "Content-Type": "application/json"}
 
+        if type == "kubernetes.io/dockerconfigjson":
+            # secret_data should contain a key '.dockerconfigjson' with the JSON string value
+            manifest_data = {
+                ".dockerconfigjson": b64encode(secret_data[".dockerconfigjson"].encode()).decode()
+            }
+        elif type == "kubernetes.io/tls":
+            # secret_data should contain 'tls.crt' and 'tls.key'
+            manifest_data = {
+                "tls.crt": b64encode(secret_data["tls.crt"].encode()).decode(),
+                "tls.key": b64encode(secret_data["tls.key"].encode()).decode()
+            }
+        else:
+            # Default: Opaque or other types
+            manifest_data = {k: b64encode(v.encode()).decode() for k, v in secret_data.items()}
+
         secret_manifest = {
             "apiVersion": "v1",
             "kind": "Secret",
             "metadata": {"name": secret_name},
-            "data": {k: b64encode(v.encode()).decode() for k, v in secret_data.items()},
-            "type": "Opaque"
+            "data": manifest_data,
+            "type": type
         }
 
         try:
@@ -511,17 +550,14 @@ class KubeApiClient:
         try:
             while True:
                 resp = req.get(url, headers=headers, verify=self.ssl_ca_cert)
-                
-                if not response.status_code in [200, 202]:
+                if not resp.status_code in [200, 202]:
                     logging.error(
-                        f"POST to {url} failed with {response.status_code}. Body {response.text}"
+                        f"POST to {url} failed with {resp.status_code}. Body {resp.text}"
                     )
                     return None
-                
                 logging.debug(
-                    f"POST to {url} succeeded with {response.status_code}. Body {response.text}"
+                    f"POST to {url} succeeded with {resp.status_code}. Body {resp.text}"
                 )
-                
                 pods = resp.json()["items"]
                 for pod in pods:
                     labels = pod["metadata"].get("labels", {})
