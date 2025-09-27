@@ -94,6 +94,9 @@ def build():
       return auth_result
     
     env = env_to_dict(auth_result)
+    user_env = env_to_dict(auth_result,"userenv")
+    for key in user_env:
+        env[key]=user_env[key]
     if env is None:
         return res_builder.build_error_message("User environment not found", status_code=HTTPStatus.UNAUTHORIZED)
 
@@ -113,8 +116,8 @@ def build():
     wsk_user_name = auth_result.get('login','').lower()
     target = json_data.get('target')
     target_user = str(target).split(':')[0]
-    if wsk_user_name != target_user:
-        return res_builder.build_error_message("Invalid target for the build.", status_code=HTTPStatus.BAD_REQUEST)
+    #if wsk_user_name != target_user:
+    #    return res_builder.build_error_message("Invalid target for the build.", status_code=HTTPStatus.BAD_REQUEST)
 
     env['wsk_user_name'] = wsk_user_name
     build_service = BuildService(user_env=env)

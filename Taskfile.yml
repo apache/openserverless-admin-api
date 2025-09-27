@@ -112,6 +112,7 @@ tasks:
     silent: true
     desc: Build the image locally
     cmds:
+      - uv lock --upgrade
       - |
         BASEIMG=$(task base-image-name)
         IMG="$BASEIMG:{{.TAG}}"

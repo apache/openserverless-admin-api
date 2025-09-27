@@ -1,2 +1,2 @@
-gnews
 beautifulsoup4
+setuptools

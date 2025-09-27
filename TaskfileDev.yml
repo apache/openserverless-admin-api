@@ -24,12 +24,19 @@ tasks:
     silent: true
     cmds:
       - mkdir -p tokens
-      - kubectl get secret nuvolaris-wsku-secret -o jsonpath='{.data.token}' | base64 --decode > tokens/token
-      - kubectl get secret nuvolaris-wsku-secret -o jsonpath='{.data.ca\.crt}' | base64 --decode > tokens/ca.crt
+      - rm -f tokens/token && kubectl -n nuvolaris exec -it nuvolaris-operator-0 -- cat /var/run/secrets/kubernetes.io/serviceaccount/token > tokens/token
+      - rm -f tokens/ca.crt && kubectl -n nuvolaris exec -it nuvolaris-operator-0 -- cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt > tokens/ca.crt
       
   setup-developer:
     desc: "Setup developer environment"
-    silent: true
+    silent: false
+    vars:
+      REGISTRY_PASS:
+        sh: ops util kubectl -- -n nuvolaris get cm/config  -o jsonpath='{.metadata.annotations.registry_password}'
+      COUCHDB_PASS:
+        sh: ops util kubectl -- -n nuvolaris get whisk -o jsonpath='{.items[0].spec.couchdb.admin.password}'
+      KUB_SERVICE_PORT:
+        sh: "docker port nuvolaris-control-plane | grep 6443 | cut -d: -f2"
     cmds:
       - task: get-tokens
       - |
@@ -41,7 +48,10 @@ tasks:
         if [ ! -d .venv ];
         then uv venv
         fi
-      - uv pip install -r pyproject.toml 2>/dev/null 
+      - uv pip install -r pyproject.toml 2>/dev/null
+      - sed -i '' 's/^KUBERNETES_SERVICE_PORT=.*/KUBERNETES_SERVICE_PORT={{.KUB_SERVICE_PORT}}/' .env
+      - sed -i '' 's/^REGISTRY_PASS=.*/REGISTRY_PASS={{.REGISTRY_PASS}}/' .env
+      - sed -i '' 's/^COUCHDB_ADMIN_PASSWORD=.*/COUCHDB_ADMIN_PASSWORD={{.COUCHDB_PASS}}/' .env
   
   run:
     desc: |

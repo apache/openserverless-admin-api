@@ -31,11 +31,11 @@
 # Registry HTTP insicuro
 # =========================
 [registry."nuvolaris-registry-svc:5000"]
-  insecure = true
+  #insecure = true
   http = true
 
 # =========================
 # Logging
 # =========================
 [log]
-  level = "debug"
+  level = "trace"
