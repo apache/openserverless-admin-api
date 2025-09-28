@@ -39,11 +39,10 @@ ADD --chown=openserverless:openserverless run.sh pyproject.toml uv.lock /home/op
 # Install uv (Python dependency manager)
 RUN pip install --no-cache-dir uv
 
-# Install Python dependencies usando il lockfile
+# Install dependencies
+USER openserverless
 RUN uv venv && uv pip install --requirement pyproject.toml
 
-# ...existing code...
-USER openserverless
 ENV HOME=/home/openserverless
 EXPOSE 5000
 
