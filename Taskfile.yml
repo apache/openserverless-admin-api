@@ -19,7 +19,7 @@
 version: '3'
 
 vars:
-  BASETAG: 0.1.0-incubating
+  BASETAG: 0.9.1-incubating
   COMMIT_ID:
     sh: git rev-parse --short HEAD
   TAG:
