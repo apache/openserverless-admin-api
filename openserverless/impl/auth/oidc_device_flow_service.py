@@ -51,12 +51,7 @@ class OidcDeviceFlowService:
             verifier, challenge = self._create_pkce_pair()
             response = self._http_client.post(
                 self._device_authorization_url(),
-                data={
-                    "client_id": self._client_id(),
-                    "scope": self._environ.get("OIDC_DEVICE_SCOPE", "openid email profile"),
-                    "code_challenge": challenge,
-                    "code_challenge_method": "S256",
-                },
+                data=self._device_authorization_form(challenge),
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
                 timeout=10,
             )
@@ -66,7 +61,7 @@ class OidcDeviceFlowService:
 
         if response.status_code >= 400:
             return res_builder.build_error_message(
-                payload.get("error_description") or payload.get("error") or "Unable to start SSO login",
+                self._provider_error_message(payload, "Unable to start SSO login"),
                 502,
             )
 
@@ -104,12 +99,8 @@ class OidcDeviceFlowService:
         try:
             response = self._http_client.post(
                 self._token_url(),
-                data={
-                    "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
-                    "client_id": self._client_id(),
-                    "device_code": flow["device_code"],
-                    "code_verifier": flow["verifier"],
-                },
+                data=self._token_form(flow),
+                auth=self._client_auth(),
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
                 timeout=10,
             )
@@ -131,7 +122,7 @@ class OidcDeviceFlowService:
         if response.status_code >= 400:
             self._store.pop(flow_id, None)
             return res_builder.build_error_message(
-                payload.get("error_description") or error or "SSO login failed",
+                self._provider_error_message(payload, "SSO login failed"),
                 401,
             )
 
@@ -148,6 +139,42 @@ class OidcDeviceFlowService:
 
     def _client_id(self):
         return self._environ.get("OIDC_CLIENT_ID") or self._environ.get("OIDC_AUDIENCE")
+
+    def _client_secret(self):
+        return (self._environ.get("OIDC_CLIENT_SECRET") or "").strip()
+
+    def _device_authorization_form(self, challenge):
+        form = {
+            "client_id": self._client_id(),
+            "scope": self._environ.get("OIDC_DEVICE_SCOPE", "openid email profile"),
+            "code_challenge": challenge,
+            "code_challenge_method": "S256",
+        }
+        client_secret = self._client_secret()
+        if client_secret:
+            form["client_secret"] = client_secret
+        return form
+
+    def _token_form(self, flow):
+        return {
+            "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+            "client_id": self._client_id(),
+            "device_code": flow["device_code"],
+            "code_verifier": flow["verifier"],
+        }
+
+    def _client_auth(self):
+        client_secret = self._client_secret()
+        if not client_secret:
+            return None
+        return (self._client_id(), client_secret)
+
+    def _provider_error_message(self, payload, fallback):
+        message = payload.get("error_description") or payload.get("error") or fallback
+        client_secret = self._client_secret()
+        if client_secret:
+            message = message.replace(client_secret, "<redacted>")
+        return message
 
     def _device_authorization_url(self):
         return self._environ.get("OIDC_DEVICE_AUTHORIZATION_URL") or (

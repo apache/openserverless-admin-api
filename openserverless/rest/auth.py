@@ -212,12 +212,12 @@ def start_oidc_device_login():
         schema:
           $ref: '#/definitions/Message'
     """
-    return OidcDeviceFlowService().start(
-        requested_namespace=_requested_namespace_from_origin(
-            request.headers.get("Origin"),
-            request.host,
-        )
+    body = request.get_json(silent=True) or {}
+    requested_namespace = body.get("namespace") or _requested_namespace_from_origin(
+        request.headers.get("Origin"),
+        request.host,
     )
+    return OidcDeviceFlowService().start(requested_namespace=requested_namespace)
 
 
 @app.route('/system/api/v1/auth/oidc/device/poll', methods=['POST'])
