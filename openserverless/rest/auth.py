@@ -265,3 +265,54 @@ def poll_oidc_device_login():
     """
     body = request.get_json(silent=True) or {}
     return OidcDeviceFlowService().poll(body.get("flow_id"))
+
+
+@app.route('/system/api/v1/auth/oidc/password', methods=['POST'])
+def oidc_password_login():
+    """
+    Backend-managed OIDC password grant login
+    ---
+    tags:
+      - Authentication Api
+    summary: Authenticate user with OIDC password grant
+    description: admin-api exchanges user credentials with the configured OIDC provider, validates the returned token and returns OpenServerless namespace data. User password and OIDC tokens are not returned.
+    operationId: oidcPasswordLogin
+    consumes:
+        - application/json
+    parameters:
+    - in: body
+      name: OidcPasswordLogin
+      required: true
+      schema:
+        type: object
+        properties:
+          username:
+            type: string
+          password:
+            type: string
+          namespace:
+            type: string
+    responses:
+      200:
+        description: Authentication successful. Returns OpenServerless user data.
+        schema:
+          $ref: '#/definitions/MessageData'
+      400:
+        description: Missing username or password.
+        schema:
+          $ref: '#/definitions/Message'
+      401:
+        description: SSO login failed.
+        schema:
+          $ref: '#/definitions/Message'
+      502:
+        description: admin-api could not authenticate with the configured OIDC provider.
+        schema:
+          $ref: '#/definitions/Message'
+    """
+    body = request.get_json(silent=True) or {}
+    return OidcDeviceFlowService().password(
+        body.get("username"),
+        body.get("password"),
+        requested_namespace=body.get("namespace"),
+    )

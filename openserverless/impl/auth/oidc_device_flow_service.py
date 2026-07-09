@@ -137,6 +137,41 @@ class OidcDeviceFlowService:
             expected_namespace=flow.get("requested_namespace"),
         )
 
+    def password(self, username, password, requested_namespace=None):
+        if not username or not password:
+            return res_builder.build_error_message("Missing SSO username or password", 400)
+
+        try:
+            response = self._http_client.post(
+                self._token_url(),
+                data=self._password_token_form(username, password),
+                auth=self._client_auth(),
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                timeout=10,
+            )
+            payload = response.json()
+        except Exception:
+            return res_builder.build_error_message("Unable to authenticate with SSO provider", 502)
+
+        if response.status_code >= 400:
+            return res_builder.build_error_message(
+                self._provider_error_message(
+                    payload,
+                    "SSO password login failed",
+                    extra_sensitive=[password],
+                ),
+                401,
+            )
+
+        access_token = payload.get("access_token")
+        if not access_token:
+            return res_builder.build_error_message("SSO password login did not return an access token", 401)
+
+        return self._auth_service.login_oidc(
+            access_token,
+            expected_namespace=requested_namespace,
+        )
+
     def _client_id(self):
         return self._environ.get("OIDC_CLIENT_ID") or self._environ.get("OIDC_AUDIENCE")
 
@@ -163,17 +198,26 @@ class OidcDeviceFlowService:
             "code_verifier": flow["verifier"],
         }
 
+    def _password_token_form(self, username, password):
+        return {
+            "grant_type": "password",
+            "client_id": self._client_id(),
+            "username": username,
+            "password": password,
+            "scope": self._environ.get("OIDC_PASSWORD_SCOPE", "openid email profile"),
+        }
+
     def _client_auth(self):
         client_secret = self._client_secret()
         if not client_secret:
             return None
         return (self._client_id(), client_secret)
 
-    def _provider_error_message(self, payload, fallback):
+    def _provider_error_message(self, payload, fallback, extra_sensitive=None):
         message = payload.get("error_description") or payload.get("error") or fallback
-        client_secret = self._client_secret()
-        if client_secret:
-            message = message.replace(client_secret, "<redacted>")
+        for sensitive in [self._client_secret()] + list(extra_sensitive or []):
+            if sensitive:
+                message = message.replace(sensitive, "<redacted>")
         return message
 
     def _device_authorization_url(self):
