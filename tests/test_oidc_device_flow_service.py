@@ -38,11 +38,12 @@ class FakeHttpClient:
         self.responses = list(responses)
         self.calls = []
 
-    def post(self, url, data=None, headers=None, timeout=None):
+    def post(self, url, data=None, auth=None, headers=None, timeout=None):
         self.calls.append(
             {
                 "url": url,
                 "data": data,
+                "auth": auth,
                 "headers": headers,
                 "timeout": timeout,
             }
@@ -123,6 +124,41 @@ class OidcDeviceFlowServiceTest(unittest.TestCase):
         )
         self.assertEqual("openserverless-admin-api", start_call["data"]["client_id"])
         self.assertEqual("S256", start_call["data"]["code_challenge_method"])
+        self.assertIsNone(start_call["auth"])
+        self.assertNotIn("client_secret", start_call["data"])
+
+    def test_start_uses_client_secret_for_confidential_client_without_returning_it(self):
+        store = {}
+        http_client = FakeHttpClient(
+            [
+                FakeResponse(
+                    {
+                        "device_code": "device-secret",
+                        "user_code": "ABCD-EFGH",
+                        "verification_uri": "https://keycloak.example.test/device",
+                        "expires_in": 600,
+                    }
+                )
+            ]
+        )
+        environ = dict(self.environ)
+        environ["OIDC_CLIENT_SECRET"] = "super-secret"
+        service = OidcDeviceFlowService(
+            environ=environ,
+            http_client=http_client,
+            auth_service=FakeAuthService(),
+            store=store,
+            now=lambda: 1000,
+        )
+
+        with app.app_context():
+            response = service.start()
+
+        self.assertEqual(200, response.status_code)
+        self.assertNotIn("client_secret", response.json)
+        self.assertNotIn("device_code", response.json)
+        self.assertNotIn("code_verifier", response.json)
+        self.assertEqual("super-secret", http_client.calls[0]["data"]["client_secret"])
 
     def test_poll_returns_pending_without_exposing_token(self):
         store = {
@@ -187,6 +223,153 @@ class OidcDeviceFlowServiceTest(unittest.TestCase):
         )
         self.assertEqual("device-secret", token_call["data"]["device_code"])
         self.assertEqual("verifier", token_call["data"]["code_verifier"])
+        self.assertIsNone(token_call["auth"])
+
+    def test_poll_uses_http_basic_auth_for_confidential_client(self):
+        store = {
+            "flow-1": {
+                "device_code": "device-secret",
+                "verifier": "verifier",
+                "expires_at": 2000,
+                "interval": 5,
+            }
+        }
+        environ = dict(self.environ)
+        environ["OIDC_CLIENT_SECRET"] = "super-secret"
+        auth_service = FakeAuthService()
+        http_client = FakeHttpClient([FakeResponse({"access_token": "oidc-token"})])
+        service = OidcDeviceFlowService(
+            environ=environ,
+            http_client=http_client,
+            auth_service=auth_service,
+            store=store,
+            now=lambda: 1000,
+        )
+
+        with app.app_context():
+            response = service.poll("flow-1")
+
+        self.assertEqual(200, response.status_code)
+        token_call = http_client.calls[0]
+        self.assertEqual(("openserverless-admin-api", "super-secret"), token_call["auth"])
+        self.assertEqual("openserverless-admin-api", token_call["data"]["client_id"])
+        self.assertNotIn("client_secret", token_call["data"])
+        self.assertNotIn("flow-1", store)
+
+    def test_password_grant_exchanges_user_credentials_for_openserverless_login(self):
+        auth_service = FakeAuthService()
+        http_client = FakeHttpClient([FakeResponse({"access_token": "oidc-token"})])
+        service = OidcDeviceFlowService(
+            environ=self.environ,
+            http_client=http_client,
+            auth_service=auth_service,
+            store={},
+            now=lambda: 1000,
+        )
+
+        with app.app_context():
+            response = service.password(
+                "michelem",
+                "user-password",
+                requested_namespace="michelem",
+            )
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual("uuid:key", response.json["AUTH"])
+        self.assertEqual(
+            [{"access_token": "oidc-token", "expected_namespace": "michelem"}],
+            auth_service.tokens,
+        )
+        token_call = http_client.calls[0]
+        self.assertEqual(
+            "https://keycloak.example.test/realms/openserverless-lab/protocol/openid-connect/token",
+            token_call["url"],
+        )
+        self.assertEqual("password", token_call["data"]["grant_type"])
+        self.assertEqual("michelem", token_call["data"]["username"])
+        self.assertEqual("user-password", token_call["data"]["password"])
+        self.assertIsNone(token_call["auth"])
+
+    def test_password_grant_uses_http_basic_auth_for_confidential_client(self):
+        environ = dict(self.environ)
+        environ["OIDC_CLIENT_SECRET"] = "super-secret"
+        http_client = FakeHttpClient([FakeResponse({"access_token": "oidc-token"})])
+        service = OidcDeviceFlowService(
+            environ=environ,
+            http_client=http_client,
+            auth_service=FakeAuthService(),
+            store={},
+            now=lambda: 1000,
+        )
+
+        with app.app_context():
+            response = service.password("michelem", "user-password")
+
+        self.assertEqual(200, response.status_code)
+        token_call = http_client.calls[0]
+        self.assertEqual(("openserverless-admin-api", "super-secret"), token_call["auth"])
+        self.assertEqual("openserverless-admin-api", token_call["data"]["client_id"])
+        self.assertNotIn("client_secret", token_call["data"])
+
+    def test_password_grant_provider_errors_do_not_leak_password_or_secret(self):
+        environ = dict(self.environ)
+        environ["OIDC_CLIENT_SECRET"] = "super-secret"
+        http_client = FakeHttpClient(
+            [
+                FakeResponse(
+                    {
+                        "error": "invalid_grant",
+                        "error_description": "bad password user-password with secret super-secret",
+                    },
+                    401,
+                )
+            ]
+        )
+        service = OidcDeviceFlowService(
+            environ=environ,
+            http_client=http_client,
+            auth_service=FakeAuthService(),
+            store={},
+            now=lambda: 1000,
+        )
+
+        with app.app_context():
+            response = service.password("michelem", "user-password")
+
+        self.assertEqual(401, response.status_code)
+        self.assertNotIn("user-password", str(response.json))
+        self.assertNotIn("super-secret", str(response.json))
+        self.assertIn("<redacted>", response.json["message"])
+
+    def test_provider_errors_do_not_leak_client_secret(self):
+        store = {}
+        environ = dict(self.environ)
+        environ["OIDC_CLIENT_SECRET"] = "super-secret"
+        http_client = FakeHttpClient(
+            [
+                FakeResponse(
+                    {
+                        "error": "invalid_client",
+                        "error_description": "bad client secret super-secret",
+                    },
+                    401,
+                )
+            ]
+        )
+        service = OidcDeviceFlowService(
+            environ=environ,
+            http_client=http_client,
+            auth_service=FakeAuthService(),
+            store=store,
+            now=lambda: 1000,
+        )
+
+        with app.app_context():
+            response = service.start()
+
+        self.assertEqual(502, response.status_code)
+        self.assertNotIn("super-secret", str(response.json))
+        self.assertIn("<redacted>", response.json["message"])
 
     def test_poll_passes_requested_namespace_to_oidc_login(self):
         store = {
