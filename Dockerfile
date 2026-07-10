@@ -32,18 +32,24 @@ RUN useradd -m -u 1001 -s /bin/bash openserverless
 WORKDIR /home/openserverless
 
 
-# Copy source code con permessi corretti
-ADD --chown=openserverless:openserverless openserverless /home/openserverless/openserverless/
-ADD --chown=openserverless:openserverless run.sh pyproject.toml uv.lock /home/openserverless/
-
 # Install uv (Python dependency manager)
 RUN pip install --no-cache-dir uv
 
-# Install dependencies
+# Copy dependency metadata first so this layer remains cached when only source
+# code changes.
+COPY --chown=openserverless:openserverless pyproject.toml uv.lock /home/openserverless/
+
+# Resolve and download all runtime dependencies while building the image.
 USER openserverless
-RUN uv venv && uv pip install --requirement pyproject.toml
+RUN uv sync --frozen --no-dev --no-install-project \
+    && rm -rf /home/openserverless/.cache/uv
+
+# Copy source code after dependencies have been installed.
+COPY --chown=openserverless:openserverless openserverless /home/openserverless/openserverless/
+COPY --chown=openserverless:openserverless run.sh /home/openserverless/run.sh
 
 ENV HOME=/home/openserverless
+ENV PATH="/home/openserverless/.venv/bin:${PATH}"
 EXPOSE 5000
 
-CMD ["uv", "run", "-m", "openserverless"]
+CMD ["python", "-m", "openserverless"]
