@@ -484,6 +484,30 @@ class KubeApiClient:
         except Exception as ex:
             logging.error(f"get_jobs {ex}")
             return None
+
+    def get_job(self, job_name: str, namespace="nuvolaris"):
+        """Get a Kubernetes Job by its exact name.
+
+        A missing Job is a normal condition for the idempotent image builder,
+        so HTTP 404 is returned as ``None`` without being treated as an API
+        failure.
+        """
+        url = f"{self.host}/apis/batch/v1/namespaces/{namespace}/jobs/{job_name}"
+        headers = {"Authorization": self.token}
+        try:
+            logging.info(f"GET request to {url}")
+            response = req.get(url, headers=headers, verify=self.ssl_ca_cert)
+            if response.status_code == 200:
+                return json.loads(response.text)
+            if response.status_code == 404:
+                return None
+            logging.error(
+                f"GET to {url} failed with {response.status_code}. Body {response.text}"
+            )
+            return None
+        except Exception as ex:
+            logging.error(f"get_job {ex}")
+            return None
         
     def delete_job(self, job_name: str, namespace="nuvolaris"):
         """
