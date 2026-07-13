@@ -20,6 +20,8 @@ from openserverless.common.kube_api_client import KubeApiClient
 import os
 import uuid
 import logging
+import re
+import shlex
 from datetime import datetime, timezone, timedelta
 from types import SimpleNamespace
 import random
@@ -36,28 +38,33 @@ class BuildService:
     based on the provided build configuration.
     """
 
-    def __init__(self, user_env=None):
+    def __init__(self, user_env=None, build_id=None, kube_client=None):
         # A super userful Kube Api Client
-        self.kube_client = KubeApiClient()       
+        self.kube_client = kube_client or KubeApiClient()
         
         # generate a unique ID for the build
-        self.id = str(uuid.uuid4())
+        self.id = build_id or str(uuid.uuid4())
 
         # user environment variables
         self.user_env = user_env if user_env is not None else {}
 
         self.user = self.user_env.get('wsk_user_name', '')
 
-        # define a unique ConfigMap and Job name based on the ID
+        # Kubernetes names are deliberately derived from the authenticated
+        # namespace and the build id. This makes build creation idempotent and
+        # prevents a client supplied image name from reaching a shell command.
+        safe_user = re.sub(r"[^a-z0-9-]", "-", self.user.lower()).strip("-")
+        safe_user = (safe_user or "user")[:24]
+        safe_id = re.sub(r"[^a-z0-9-]", "", self.id.lower())[:20]
         if len(self.user) > 0:
-            self.cm = f"{CM_NAME}-{self.user}-{self.id}"
-            self.job_name = f"{JOB_NAME}-{self.user}-{self.id}"
+            self.cm = f"{CM_NAME}-{safe_user}-{safe_id}"
+            self.job_name = f"{JOB_NAME}-{safe_user}-{safe_id}"
         else:
-            self.cm = f"{CM_NAME}-{self.id}"
-            self.job_name = f"{JOB_NAME}-{self.id}"
+            self.cm = f"{CM_NAME}-{safe_id}"
+            self.job_name = f"{JOB_NAME}-{safe_id}"
         
         # define registry host
-        self.registry_host = self.get_registry_host()
+        self.registry_host = self.get_registry_push_host()
         logging.info(f"Using registry host: {self.registry_host}")
 
         # define registry auth
@@ -94,37 +101,51 @@ class BuildService:
         secret = self.kube_client.post_secret(secret_name=random_name, secret_data=data, type="kubernetes.io/dockerconfigjson")
         return secret
 
-    def get_registry_host(self) -> str:
-        """
-        Retrieve the registry host
-        - firstly, use local environment
-        - then, check if the user environment has a registry host set
-        - otherwise retrieve the OpenServerless config map
-        - if not present use a default value
-        """
+    def _get_registry_annotation(self, name: str, default: str = "") -> str:
+        ops_config_map = self.kube_client.get_config_map('config')
+        if ops_config_map is None:
+            return default
+        annotations = ops_config_map.get('metadata', {}).get('annotations', {})
+        return str(annotations.get(name, default)).strip()
 
-        # Check environment variable (only use if not empty)
-        registry_host = os.environ.get("REGISTRY_HOST", "").strip()
+    def get_registry_push_host(self) -> str:
+        """
+        Return the endpoint used by BuildKit pods to push an image.
+
+        This is intentionally separate from the host embedded in an action
+        image reference: a Kubernetes Service is reachable by BuildKit, but it
+        is generally not resolvable by containerd on a cluster node.
+        """
+        registry_host = os.environ.get("REGISTRY_PUSH_HOST", "").strip()
         if registry_host:
             return registry_host
-
-        # Check user environment (only use if not empty)
-        user_registry_host = self.user_env.get('REGISTRY_HOST', "").strip()
+        user_registry_host = self.user_env.get('REGISTRY_PUSH_HOST', "").strip()
         if user_registry_host:
             return user_registry_host
+        return (
+            self._get_registry_annotation("registry_push_host")
+            or self._get_registry_annotation("registry_internal_host")
+            or "nuvolaris-registry-svc:5000"
+        )
 
-        # Try to get from OpenServerless config map
-        registry_host = 'nuvolaris-registry-svc:5000'  # Default fallback
-        ops_config_map = self.kube_client.get_config_map('config')
-        if ops_config_map is not None:
-            if 'annotations' in ops_config_map.get('metadata', {}):
-                annotations = ops_config_map['metadata']['annotations']
-                if 'registry_host' in annotations:
-                    config_registry_host = annotations.get('registry_host', '').strip()
-                    if config_registry_host:
-                        registry_host = config_registry_host
+    def get_registry_pull_host(self) -> str:
+        """Return the registry host that cluster nodes use for action pulls."""
+        registry_host = os.environ.get("REGISTRY_PULL_HOST", "").strip()
+        if registry_host:
+            return registry_host
+        user_registry_host = self.user_env.get('REGISTRY_PULL_HOST', "").strip()
+        if user_registry_host:
+            return user_registry_host
+        return (
+            self._get_registry_annotation("registry_pull_host")
+            or self._get_registry_annotation("registry_host")
+            or self.get_registry_push_host()
+        )
 
-        return registry_host
+    # Kept for callers of the alpha builder API. New code must use the
+    # explicit push/pull methods above.
+    def get_registry_host(self) -> str:
+        return self.get_registry_push_host()
     
     def get_registry_auth(self) -> str:
         """
@@ -151,7 +172,7 @@ class BuildService:
                 logging.error(f"Failed to create registry secret for custom credentials")
                 
         
-        return 'registry-pull-secret'
+        return os.environ.get("REGISTRY_PUSH_SECRET", "registry-pull-secret-int")
 
     def create_docker_file(self, requirements=None) -> str:
         """
@@ -282,7 +303,11 @@ class BuildService:
             return (False, "Failed to create ConfigMap for build context")
 
         logging.info(f"ConfigMap {self.cm} created successfully")
-        job_template = self.create_build_job(image_name)
+        try:
+            job_template = self.create_build_job(image_name)
+        except ValueError as exc:
+            self._cleanup_build_resources()
+            return (False, str(exc))
 
         job = self.kube_client.post_job(job_template)
         if not job:
@@ -293,27 +318,52 @@ class BuildService:
 
         logging.info(f"Job {self.job_name} created successfully")
 
-        # Wait for the copy-build-context init container to complete before cleaning up resources
-        # The init container needs to copy the ConfigMap contents to the workspace volume
-        # Only after it completes (successfully or with error) can we safely delete the ConfigMap and Secret
-        logging.info(f"Waiting for init container 'copy-build-context' to complete for job {self.job_name}")
-        init_container_completed = self.kube_client.wait_for_init_container_completion(
-            job_name=self.job_name,
-            init_container_name="copy-build-context",
-            namespace="nuvolaris",
-            timeout_seconds=120  # 2 minutes should be enough for copying files
-        )
-
-        if init_container_completed:
-            logging.info(f"Init container completed for job {self.job_name}, cleaning up resources")
-            self._cleanup_build_resources()
-        else:
-            logging.warning(f"Init container did not complete within timeout for job {self.job_name}, resources will not be cleaned up automatically")
-            # Note: Resources are not cleaned up if init container doesn't complete
-            # This prevents race conditions where the ConfigMap is deleted while the init container still needs it
-
-        # Success: return True and the job name (string) so callers get a simple identifier
+        # Do not wait for the Job in the HTTP start request. The client polls the
+        # status endpoint and cleanup is performed after a terminal condition.
         return (True, self.job_name)
+
+    def action_image(self, image_name: str) -> str:
+        """Return the image reference that must be stored on an action."""
+        return f"{self.get_registry_pull_host()}/{image_name}"
+
+    def get_build_status(self, image_name: str | None = None) -> dict | None:
+        """Return a stable state for the deterministic build Job."""
+        job = self.kube_client.get_job(self.job_name)
+        if job is None:
+            return None
+
+        if image_name is None:
+            image_name = (
+                job.get("metadata", {})
+                .get("annotations", {})
+                .get("openserverless.apache.org/target-image")
+            )
+
+        status = job.get("status", {})
+        conditions = status.get("conditions") or []
+        state = "queued"
+        message = "Build is queued"
+        for condition in conditions:
+            if condition.get("type") == "Complete" and condition.get("status") == "True":
+                state = "succeeded"
+                message = condition.get("message") or "Build completed"
+                break
+            if condition.get("type") == "Failed" and condition.get("status") == "True":
+                state = "failed"
+                message = condition.get("message") or condition.get("reason") or "Build failed"
+                break
+        else:
+            if status.get("active", 0) > 0:
+                state = "running"
+                message = "Build is running"
+
+        return {
+            "id": self.id,
+            "job_name": self.job_name,
+            "state": state,
+            "message": message,
+            "image": self.action_image(image_name) if state == "succeeded" and image_name else None,
+        }
     
     def _cleanup_build_resources(self):
         """
@@ -407,14 +457,35 @@ class BuildService:
         else:
             registry_image_name = f"{image_name}"
 
+        if "://" in registry_image_name or not re.fullmatch(
+            r"[A-Za-z0-9][A-Za-z0-9._:/@-]{0,511}", registry_image_name
+        ):
+            raise ValueError("Invalid target image reference")
+        quoted_registry_image_name = shlex.quote(registry_image_name)
+
         # --- MANIFEST DEL JOB ---
         job_manifest = {
             "apiVersion": "batch/v1",
             "kind": "Job",
-            "metadata": {"name": self.job_name},
+            "metadata": {
+                "name": self.job_name,
+                "labels": {
+                    "openserverless.apache.org/component": "runtime-builder",
+                    "openserverless.apache.org/build-id": self.id[:63],
+                },
+                "annotations": {
+                    "openserverless.apache.org/target-image": image_name,
+                },
+            },
             "spec": {
                 "backoffLimit": 0,
                 "template": {
+                    "metadata": {
+                        "labels": {
+                            "openserverless.apache.org/component": "runtime-builder",
+                            "openserverless.apache.org/build-id": self.id[:63],
+                        }
+                    },
                     "spec": {
                         "restartPolicy": "Never",
                         "volumes": [
@@ -460,11 +531,13 @@ class BuildService:
                         "containers": [
                             {
                                 "name": "buildkit",
-                                "image": "moby/buildkit:master-rootless",
+                                "image": os.environ.get(
+                                    "BUILDKIT_IMAGE", "moby/buildkit:v0.30.0-rootless"
+                                ),
                                 "command": ["sh", "-c"],
                                 "args": [
                                     "rootlesskit buildkitd --config /config/buildkitd.toml  & sleep 3 && "
-                                    f"buildctl build --progress=plain --frontend=dockerfile.v0 --local context=/workspace --local dockerfile=/workspace --output=type=image,name={registry_image_name},push=true"
+                                    f"buildctl build --progress=plain --frontend=dockerfile.v0 --local context=/workspace --local dockerfile=/workspace --output=type=image,name={quoted_registry_image_name},push=true"
                                 ],                                
                                 "securityContext": {
                                     "runAsUser": 1000,
