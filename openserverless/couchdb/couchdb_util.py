@@ -17,6 +17,7 @@
 #
 import os, json, time, sys, logging
 import requests as req
+from requests.auth import HTTPBasicAuth
 import openserverless.config as cfg
 
 
@@ -31,7 +32,7 @@ class CouchDB:
         self.db_username = environ.get("COUCHDB_ADMIN_USER", "whisk_admin")
         self.db_password = environ.get("COUCHDB_ADMIN_PASSWORD", "wfoygT7dvDtE")
 
-        self.db_auth = req.auth.HTTPBasicAuth(self.db_username, self.db_password)
+        self.db_auth = HTTPBasicAuth(self.db_username, self.db_password)
         self.db_url = f"{self.db_protocol}://{self.db_host}:{self.db_port}"
         self.db_base = f"{self.db_url}/{self.db_prefix}"
         self.db_session = req.Session()
@@ -92,7 +93,7 @@ class CouchDB:
         if no_auth:
             db_auth = None
         elif user:
-            db_auth = req.auth.HTTPBasicAuth(user, password)
+            db_auth = HTTPBasicAuth(user, password)
         else:
             db_auth = self.db_auth
         session.auth = db_auth
@@ -165,7 +166,7 @@ class CouchDB:
         if no_auth:
             db_auth = None
         elif user:
-            db_auth = req.auth.HTTPBasicAuth(user, password)
+            db_auth = HTTPBasicAuth(user, password)
         else:
             db_auth = self.db_auth
 
