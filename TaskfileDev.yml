@@ -35,8 +35,15 @@ tasks:
         sh: ops util kubectl -- -n nuvolaris get cm/config  -o jsonpath='{.metadata.annotations.registry_password}'
       COUCHDB_PASS:
         sh: ops util kubectl -- -n nuvolaris get whisk -o jsonpath='{.items[0].spec.couchdb.admin.password}'
+      KUB_TYPE:
+        sh: "ops debug kube detect"
       KUB_SERVICE_PORT:
-        sh: "docker port nuvolaris-control-plane | grep 6443 | cut -d: -f2"
+        sh: |
+          if [ "{{.KUB_TYPE}}" = "kind" ]; then
+            docker port nuvolaris-control-plane | grep 6443 | cut -d: -f2
+          else
+            kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}' | sed -E 's|.*:([0-9]+)$|\1|'
+          fi
     cmds:
       - task: get-tokens
       - |
@@ -49,9 +56,16 @@ tasks:
         then uv venv
         fi
       - uv pip install -r pyproject.toml 2>/dev/null
-      - sed -i '' 's/^KUBERNETES_SERVICE_PORT=.*/KUBERNETES_SERVICE_PORT={{.KUB_SERVICE_PORT}}/' .env
-      - sed -i '' 's/^REGISTRY_PASS=.*/REGISTRY_PASS={{.REGISTRY_PASS}}/' .env
-      - sed -i '' 's/^COUCHDB_ADMIN_PASSWORD=.*/COUCHDB_ADMIN_PASSWORD={{.COUCHDB_PASS}}/' .env
+      - |
+        {{if eq OS "darwin"}}
+            sed -i '' 's/^KUBERNETES_SERVICE_PORT=.*/KUBERNETES_SERVICE_PORT={{.KUB_SERVICE_PORT}}/' .env
+            sed -i '' 's/^REGISTRY_PASS=.*/REGISTRY_PASS={{.REGISTRY_PASS}}/' .env
+            sed -i '' 's/^COUCHDB_ADMIN_PASSWORD=.*/COUCHDB_ADMIN_PASSWORD={{.COUCHDB_PASS}}/' .env
+        {{else}}
+            sed -i 's/^KUBERNETES_SERVICE_PORT=.*/KUBERNETES_SERVICE_PORT={{.KUB_SERVICE_PORT}}/' .env
+            sed -i 's/^REGISTRY_PASS=.*/REGISTRY_PASS={{.REGISTRY_PASS}}/' .env
+            sed -i 's/^COUCHDB_ADMIN_PASSWORD=.*/COUCHDB_ADMIN_PASSWORD={{.COUCHDB_PASS}}/' .env
+        {{end}}
       - task: setup-secret
   
   setup-secret:
