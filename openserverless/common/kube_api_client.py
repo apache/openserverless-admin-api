@@ -583,6 +583,34 @@ class KubeApiClient:
                 if line:
                     print(line.decode())
 
+    def get_job(self, job_name: str, namespace="nuvolaris"):
+        """
+        Get a Kubernetes job by name.
+        :param job_name: Name of the job.
+        :param namespace: Namespace where the job is located.
+        :return: The job data or None if not found.
+        """
+        url = f"{self.host}/apis/batch/v1/namespaces/{namespace}/jobs/{job_name}"
+        headers = {"Authorization": self.token}
+
+        try:
+            logging.info(f"GET request to {url}")
+            response = req.get(url, headers=headers, verify=self.ssl_ca_cert)
+
+            if response.status_code == 200:
+                logging.debug(
+                    f"GET to {url} succeeded with {response.status_code}. Body {response.text}"
+                )
+                return json.loads(response.text)
+
+            logging.error(
+                f"GET to {url} failed with {response.status_code}. Body {response.text}"
+            )
+            return None
+        except Exception as ex:
+            logging.error(f"get_job {ex}")
+            return None
+
     def check_job_status(self, job_name: str, namespace="nuvolaris"):
         """
         Check the status of a job by its name.

@@ -165,7 +165,94 @@ def build():
                                               data=additional_data,
                                               status_code=HTTPStatus.OK)
 
-@app.route('/system/api/v1/build/cleanup', methods=['POST'])    
+@app.route('/system/api/v1/build/status', methods=['GET'])
+def build_status():
+    """
+    Build Status Endpoint
+    ---
+    tags:
+      - Build
+    summary: Get the status of a build job.
+    description: This endpoint returns the current status of a Kubernetes build job by its id.
+    operationId: buildStatus
+    security:
+        - openwhiskBasicAuth: []
+    parameters:
+      - in: query
+        name: id
+        type: string
+        required: true
+        description: The build id returned by /build/start.
+        example: "550e8400-e29b-41d4-a716-446655440000"
+    responses:
+      200:
+        description: Build status retrieved successfully.
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Build status retrieved successfully."
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                job_name:
+                  type: string
+                phase:
+                  type: string
+                  enum: [Pending, Running, Succeeded, Failed]
+                active:
+                  type: integer
+                succeeded:
+                  type: integer
+                failed:
+                  type: integer
+                startTime:
+                  type: string
+                completionTime:
+                  type: string
+      400:
+        description: Bad Request. Missing id parameter.
+        schema:
+          $ref: '#/definitions/Message'
+      401:
+        description: Unauthorized. Invalid or missing authorization header.
+        schema:
+          $ref: '#/definitions/Message'
+      404:
+        description: Not Found. No build job with the given id for this user.
+        schema:
+          $ref: '#/definitions/Message'
+    """
+    auth_result = authorize()
+    if isinstance(auth_result, Response):
+      return auth_result
+
+    env = env_to_dict(auth_result)
+    # Check if env is empty (env_to_dict returns dict, never None)
+    if not env:
+        return res_builder.build_error_message("User environment not found", status_code=HTTPStatus.UNAUTHORIZED)
+
+    build_id = request.args.get('id')
+    if not build_id:
+        return res_builder.build_error_message("No id provided for build status.", status_code=HTTPStatus.BAD_REQUEST)
+
+    wsk_user_name = auth_result.get('login', '').lower()
+    env['wsk_user_name'] = wsk_user_name
+    build_service = BuildService(user_env=env)
+    success, result = build_service.get_job_status(build_id)
+
+    if not success:
+        error_message = result if isinstance(result, str) else "Build job not found."
+        return res_builder.build_error_message(error_message, status_code=HTTPStatus.NOT_FOUND)
+
+    return res_builder.build_response_message("Build status retrieved successfully.",
+                                              data=result,
+                                              status_code=HTTPStatus.OK)
+
+@app.route('/system/api/v1/build/cleanup', methods=['POST'])
 def clean():
     """
     Cleanup Endpoint
