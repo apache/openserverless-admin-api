@@ -24,8 +24,7 @@ vars:
     sh: git rev-parse --short HEAD
   TAG:
     sh: git describe --tags --abbrev=0 2>/dev/null || echo latest
-  KUB_TYPE:
-    sh: "ops debug kube detect"
+  
 
 dotenv:
  - .env  
@@ -123,6 +122,9 @@ tasks:
   build-and-load:
     silent: true
     desc: Build the image and loads it to the local Kind or k3s cluster
+    vars:
+      KUB_TYPE:
+        sh: "ops debug kube detect"
     cmds:
       - task: build
       - |
