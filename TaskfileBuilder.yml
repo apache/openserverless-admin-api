@@ -24,7 +24,7 @@ tasks:
     desc: Send the build to the server
     vars:
       AUTH:
-        sh: cat ~/.wskprops | grep "AUTH" | cut -d'=' -f2 | xargs -I {}
+        sh: grep '^AUTH=' ~/.wskprops | cut -d= -f2
     cmds:
       - if test -z "{{.SOURCE}}"; then echo "SOURCE IS NOT SET" && exit 1; fi
       - if test -z "{{.TARGET}}"; then echo "TARGET IS NOT SET" && exit 1; fi
@@ -37,13 +37,13 @@ tasks:
     deps:
       - cleanjobs
       # - updatetoml
-    silent: true
+    silent: false
   
   clean:
     desc: Cleanup old build jobs via api
     vars:
       AUTH:
-        sh: cat ~/.wskprops | grep "AUTH" | cut -d'=' -f2 | xargs -I {}
+        sh: cat ~/.wskprops | grep "AUTH" | cut -d'=' -f2
       MAX_AGE_HOURS:
         sh: |
           if test -z "{{.MAX_AGE_HOURS}}"; 
@@ -60,14 +60,14 @@ tasks:
   logs:
     desc: Show logs of the last build job
     cmds:
-      - kubectl -n nuvolaris logs $(kubectl get jobs.batch -o name | grep "build-") -c buildkit --follow
+      - kubectl -n nuvolaris logs $(kubectl -n nuvolaris get jobs.batch -o name | grep "build-") -c buildkit --follow
     silent: false
   
   cleanjobs:
     desc: Clean up old jobs
     cmds:
-      - for I in $(kubectl get jobs -n nuvolaris | grep build | awk '{ print $1 }' | tr "\n" " "); do kubectl delete job $I; done
-      - for I in $(kubectl get cm -n nuvolaris | grep "cm-" | awk '{ print $1 }' | tr "\n" " "); do kubectl delete cm $I; done
+      - for I in $(kubectl get jobs -n nuvolaris | grep build | awk '{ print $1 }' | tr "\n" " "); do kubectl -n nuvolaris delete job $I; done
+      - for I in $(kubectl get cm -n nuvolaris | grep "cm-" | awk '{ print $1 }' | tr "\n" " "); do kubectl  -n nuvolaris delete cm $I; done
     silent: true
   
   updatetoml:
@@ -105,7 +105,8 @@ tasks:
         sh: echo '{{.IMAGE}}' | cut -d':' -f2
     cmds:
       - echo "Getting image {{.IMAGE_NAME}} with hash {{.HASH}}"
-      - curl -u $REGISTRY_USER:$REGISTRY_PASS $REGISTRY_HOST/v2/{{.IMAGE_NAME}}/manifests/{{.HASH}}
+      - |
+        curl  -sS -i -u $REGISTRY_USER:$REGISTRY_PASS -H 'Accept: application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json' $REGISTRY_HOST/v2/{{.IMAGE_NAME}}/manifests/{{.HASH}}
     silent: false
 
   delete-image:
@@ -117,7 +118,8 @@ tasks:
       HASH:
         sh: echo '{{.IMAGE}}' | cut -d':' -f2
       MANIFEST_DIGEST:
-        sh: curl -u $REGISTRY_USER:$REGISTRY_PASS -s -D - -o /dev/null $REGISTRY_HOST/v2/{{.IMAGE_NAME}}/manifests/{{.HASH}} | grep -i 'Docker-Content-Digest:' | awk '{print $2}' | tr -d '\r'
+        sh: |
+            curl -u $REGISTRY_USER:$REGISTRY_PASS  -H 'Accept: application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json' -s -D - -o /dev/null $REGISTRY_HOST/v2/{{.IMAGE_NAME}}/manifests/{{.HASH}} | grep -i 'Docker-Content-Digest:' | awk '{print $2}' | tr -d '\r'
     cmds:
       - echo 'Deleting image {{.IMAGE}}'
       - echo "Deleting manifest {{.MANIFEST_DIGEST}} for image {{.IMAGE_NAME}}"
