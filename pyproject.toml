@@ -40,9 +40,9 @@ dependencies = [
     "waitress==3.0.2",
     "flasgger==0.9.7.1",
     "flask-cors>=6.0.0",
-    "cryptography>=44.0.0",
-    "python-dotenv>=1.1.1",
-    "bcrypt>=4.3.0",
+    "cryptography>=50.0.0",
+    "python-dotenv>=1.2.2",
+    "bcrypt>=4.3.0"
 ]
 
 [project.optional-dependencies]
@@ -52,3 +52,8 @@ dev = [
 
 [project.scripts]
 system = "openserverless.app:main"
+
+[dependency-groups]
+dev = [
+    "pytest-cov>=7.1.0",
+]
