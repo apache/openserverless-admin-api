@@ -34,6 +34,16 @@ Available APIs at the moment:
 
 `PATCH /system/api/v1/auth/{login}` - Update the user password patching the corresponding wsku/\<login\> entry.
 
+`POST /system/api/v1/auth/oidc` - Authenticate the user with an OIDC access token.
+
+`POST /system/api/v1/auth/oidc/device/start` - Start a backend-managed OIDC Device Authorization login.
+
+`POST /system/api/v1/auth/oidc/device/poll` - Poll a backend-managed OIDC Device Authorization login.
+
+`POST /system/api/v1/auth/oidc/password` - Authenticate the user with the OIDC password grant.
+
+More informations [Here](docs/OIDC.md)
+
 ### Build API
 
 `POST /system/api/v1/build/start` - Perform the build of a custom image and push it to repository.
