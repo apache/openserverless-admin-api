@@ -18,6 +18,7 @@
 import shutil
 from openserverless.common.kube_api_client import KubeApiClient
 import os
+import re
 import uuid
 import logging
 from datetime import datetime, timezone, timedelta
@@ -94,6 +95,13 @@ class BuildService:
         secret = self.kube_client.post_secret(secret_name=random_name, secret_data=data, type="kubernetes.io/dockerconfigjson")
         return secret
 
+    @staticmethod
+    def _strip_scheme(host: str) -> str:
+        """Strip a leading http:// or https:// scheme, since image references and
+        docker-server auth entries must not include one (unlike REGISTRY_HOST's other
+        use as a plain URL for curl-based registry API calls)."""
+        return re.sub(r'^https?://', '', host)
+
     def get_registry_host(self) -> str:
         """
         Retrieve the registry host
@@ -106,12 +114,12 @@ class BuildService:
         # Check environment variable (only use if not empty)
         registry_host = os.environ.get("REGISTRY_HOST", "").strip()
         if registry_host:
-            return registry_host
+            return self._strip_scheme(registry_host)
 
         # Check user environment (only use if not empty)
         user_registry_host = self.user_env.get('REGISTRY_HOST', "").strip()
         if user_registry_host:
-            return user_registry_host
+            return self._strip_scheme(user_registry_host)
 
         # Try to get from OpenServerless config map
         registry_host = 'nuvolaris-registry-svc:5000'  # Default fallback
@@ -124,7 +132,7 @@ class BuildService:
                     if config_registry_host:
                         registry_host = config_registry_host
 
-        return registry_host
+        return self._strip_scheme(registry_host)
     
     def get_registry_auth(self) -> str:
         """
@@ -386,7 +394,45 @@ class BuildService:
             logging.error(f"Error deleting old build jobs: {e}")
             return -1
 
-    
+    def get_job_status(self, build_id: str):
+        """
+        Get the status of a build job by its build id.
+        :param build_id: The uuid returned by build() when the job was created.
+        :return: (success: bool, result: dict | str) - dict with the job status if found,
+                 error string otherwise.
+        """
+        job_name = f"{JOB_NAME}-{self.user}-{build_id}" if self.user else f"{JOB_NAME}-{build_id}"
+        job = self.kube_client.get_job(job_name=job_name)
+
+        if job is None:
+            return (False, "Build job not found")
+
+        status = job.get("status", {})
+        active = status.get("active", 0)
+        succeeded = status.get("succeeded", 0)
+        failed = status.get("failed", 0)
+
+        if succeeded > 0:
+            phase = "Succeeded"
+        elif failed > 0:
+            phase = "Failed"
+        elif active > 0:
+            phase = "Running"
+        else:
+            phase = "Pending"
+
+        result = {
+            "id": build_id,
+            "job_name": job_name,
+            "phase": phase,
+            "active": active,
+            "succeeded": succeeded,
+            "failed": failed,
+            "startTime": status.get("startTime"),
+            "completionTime": status.get("completionTime"),
+        }
+        return (True, result)
+
     def check_build_dir(self, unzip_dir: str) -> bool:
         """
         Check if the unzipped directory contains a Dockerfile and is not empty."""

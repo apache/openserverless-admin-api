@@ -18,4 +18,6 @@
 .vscode
 .venv
 tokens
-.env
+.env*
+.coverage
+docs

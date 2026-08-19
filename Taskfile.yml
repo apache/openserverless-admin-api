@@ -24,6 +24,7 @@ vars:
     sh: git rev-parse --short HEAD
   TAG:
     sh: git describe --tags --abbrev=0 2>/dev/null || echo latest
+  
 
 dotenv:
  - .env  
@@ -120,13 +121,23 @@ tasks:
 
   build-and-load:
     silent: true
-    desc: Build the image and loads it to local Kind cluster
+    desc: Build the image and loads it to the local Kind or k3s cluster
+    vars:
+      KUB_TYPE:
+        sh: "ops debug kube detect"
     cmds:
       - task: build
       - |
         BASEIMG=$(task base-image-name)
         IMG="$BASEIMG:{{.TAG}}"
-        kind load docker-image $IMG --name=nuvolaris
+        if [ "{{.KUB_TYPE}}" = "kind" ]; then
+          kind load docker-image $IMG --name=nuvolaris
+        elif [ "{{.KUB_TYPE}}" = "k3s" ]; then
+          docker save $IMG | sudo k3s ctr images import -
+        else
+          echo "Error: unsupported KUB_TYPE '{{.KUB_TYPE}}' for loading images"
+          exit 1
+        fi
 
   utest:
     cmds:
@@ -136,3 +147,28 @@ tasks:
             uv run python3 -m doctest -o ELLIPSIS $test {{.CLI_ARGS}}
         done
     silent: true
+
+  itest:
+    desc: Run integration tests (Flask routes, with external services mocked)
+    cmds:
+      - uv run python3 -m unittest discover -s tests -p "test_{{.T}}*.py" -v {{.CLI_ARGS}}
+    silent: true
+
+  test:
+    desc: Run all tests
+    silent: true
+    cmds:
+      - task: utest
+      - task: itest
+
+  coverage:
+    desc: Run all tests (utest doctests + itest pytest) with a combined coverage report
+    silent: true
+    cmds:
+      - uv run coverage erase
+      - PYTHONPATH=. uv run coverage run --source=openserverless -m pytest tests/
+      - |
+        for test in openserverless/common/{{.T}}*.py
+        do  PYTHONPATH=. uv run coverage run --source=openserverless -a -m doctest -o ELLIPSIS $test
+        done
+      - uv run coverage report -m {{.CLI_ARGS}}

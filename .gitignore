@@ -57,3 +57,5 @@ actions/github/webhook/common
 .venv
 build
 tokens
+.pytest_cache
+.coverage

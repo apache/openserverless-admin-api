@@ -29,17 +29,17 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: License   
         uses: apache/skywalking-eyes@main
       - name: Set up Python 3.12
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v7
         with:
           python-version: 3.12
       - name: Setup
         run: bash .github/cisetup.sh
-      - name: Unit Tests
-        run: task utest
+      - name: Tests
+        run: task test
         continue-on-error: false
