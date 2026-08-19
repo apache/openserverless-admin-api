@@ -36,3 +36,16 @@ github:
         - root
       restrict_deletion: true
       restrict_force_push: true
+  protected_branches:
+    0.9.0:
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+
+    main:
+      required_linear_history: true
+      required_status_checks:
+        strict: true
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+      required_conversation_resolution: true
