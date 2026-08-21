@@ -23,7 +23,7 @@
 - [X] Add integration tests
 - [X] Add unit tests
 - [X] Add more unit tests
-- [ ] Tasks install `registry-pull-secret-int` that should be used instead of `registry-pull-secret`.
+- [X] Tasks install `registry-pull-secret-builder` that should be used instead of `registry-pull-secret`.
 
 ## Various
 
