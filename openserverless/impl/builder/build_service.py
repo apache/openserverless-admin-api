@@ -152,14 +152,14 @@ class BuildService:
             if registry_secret is not None:
                 self.registry_auth = registry_secret['metadata']['name']
                 # is custom only when is not equal to the default
-                if self.registry_auth != "registry-pull-secret":
+                if self.registry_auth != "registry-pull-secret-builder":
                     self.custom_registry_auth = True
                 return self.registry_auth
             else:
                 logging.error(f"Failed to create registry secret for custom credentials")
                 
         
-        return 'registry-pull-secret'
+        return 'registry-pull-secret-builder'
 
     def create_docker_file(self, requirements=None) -> str:
         """

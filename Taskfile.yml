@@ -131,8 +131,10 @@ tasks:
         BASEIMG=$(task base-image-name)
         IMG="$BASEIMG:{{.TAG}}"
         if [ "{{.KUB_TYPE}}" = "kind" ]; then
+          echo "Loading image to kind"
           kind load docker-image $IMG --name=nuvolaris
         elif [ "{{.KUB_TYPE}}" = "k3s" ]; then
+          echo "Loading image to k3s"
           docker save $IMG | sudo k3s ctr images import -
         else
           echo "Error: unsupported KUB_TYPE '{{.KUB_TYPE}}' for loading images"
