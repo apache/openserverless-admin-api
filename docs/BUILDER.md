@@ -17,12 +17,12 @@
   ~ under the License.
   ~
 -->
-# Deployer
+# Builder
 
-Deployer is the implementation of the feature described 
+Builder is the implementation of the feature described 
 in [OpenServerless Issue 156](https://github.com/apache/openserverless/issues/156).
 
-Specifically, the deployer can extend a default runtime with user-defined 
+Specifically, the builder can extend a default runtime with user-defined 
 "requirements" by generating a new "extended" user runtime and pushing it to 
 OpenServerless’ internal Docker registry.
 
@@ -52,13 +52,13 @@ of the json body payload:
 }
 ```
 
-By default the deployer will push to OpenServerless internal docker registry.
+By default the builder will push to OpenServerless internal docker registry.
 To detect the host, it will use the `registry_host` inside the Operator's config 
 map.
 To authenticate, it will use the imagePullSecret named `registry-pull-secret` 
 (these credentials are valid to push and pull from the internal registry).
 
-The deployer supports also pushing to an external private docker registry, using 
+The builder supports also pushing to an external private docker registry, using 
 ops env:
 
 - `REGISTRY_HOST` - put here the hostname:port of the external private registry.
@@ -76,11 +76,40 @@ See [Examples](#examples) section
 
 `POST /system/api/v1/build/start` - Perform the build of a custom image and push it to repository.
 
+`GET /system/api/v1/build/status` - Get the status of a build job by its id.
+
 `POST /system/api/v1/build/cleanup` - Perform cleanup of build jobs older than 24 hours (or different number of hours if otherwise specified)
 
-Both endpoints requires the wsk token in an `authorization` header.
+All endpoints require the wsk token in an `authorization` header.
 The token will be used to check the user (the target image hash needs to be 
 always in the format `user:image-tag`).
+
+### Checking a build's status
+
+`GET /system/api/v1/build/status?id=<build-id>` returns the current status of the
+Kubernetes job created by `/build/start`, identified by the `id` returned in that
+call's response.
+
+Example response:
+
+```json
+{
+  "message": "Build status retrieved successfully.",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "job_name": "build-myuser-abc123",
+    "phase": "Succeeded",
+    "active": 0,
+    "succeeded": 1,
+    "failed": 0,
+    "startTime": "2026-08-22T10:00:00Z",
+    "completionTime": "2026-08-22T10:02:30Z"
+  }
+}
+```
+
+`phase` is one of `Pending`, `Running`, `Succeeded`, or `Failed`. A `404` is
+returned if no build job with the given id exists for the authenticated user.
 
 ## Available tasks
 
