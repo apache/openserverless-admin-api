@@ -121,7 +121,7 @@ tasks:
 
   build-and-load:
     silent: true
-    desc: Build the image and loads it to the local Kind or k3s cluster
+    desc: Build the image and loads it to the local Kind, k3s, microk8s cluster
     vars:
       KUB_TYPE:
         sh: "ops debug kube detect"
@@ -136,6 +136,9 @@ tasks:
         elif [ "{{.KUB_TYPE}}" = "k3s" ]; then
           echo "Loading image to k3s"
           docker save $IMG | sudo k3s ctr images import -
+        elif [ "{{.KUB_TYPE}}" = "microk8s" ]; then
+          echo "Loading image to microk8s"
+          docker save $IMG | microk8s ctr images import -
         else
           echo "Error: unsupported KUB_TYPE '{{.KUB_TYPE}}' for loading images"
           exit 1

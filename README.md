@@ -48,9 +48,11 @@ More informations [Here](docs/OIDC.md)
 
 `POST /system/api/v1/build/start` - Perform the build of a custom image and push it to repository.
 
+`GET /system/api/v1/build/status` - Get the status of a build job by its id.
+
 `POST /system/api/v1/build/cleanup` - Perform cleanup of build jobs older than 24 hours (or different number of hours if otherwise specified)
 
-More informations [Here](docs/DEPLOYER.md)
+More informations [Here](docs/BUILDER.md)
 
 ### Info API
 
@@ -158,4 +160,4 @@ https://github.com/apache/openserverless-admin-api/actions
 
 ## Additional Documentation
 
-- [Deployer](docs/DEPLOYER.md)
+- [Builder](docs/BUILDER.md)

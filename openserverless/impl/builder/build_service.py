@@ -227,7 +227,7 @@ class BuildService:
         if secret is None:
             return (False, f"Secret {self.registry_auth} is not configured!")
 
-        logging.info(f"Using registry auth: {self.registry_auth}")
+        logging.info(f"Using registry auth: {self.registry_auth}. Custom registry is: {self.custom_registry_auth}")
 
         # firstly remove old build jobs
         self.delete_old_build_jobs()
