@@ -121,7 +121,7 @@ tasks:
 
   build-and-load:
     silent: true
-    desc: Build the image and loads it to the local Kind or k3s cluster
+    desc: Build the image and loads it to the local Kind, k3s, microk8s cluster
     vars:
       KUB_TYPE:
         sh: "ops debug kube detect"
