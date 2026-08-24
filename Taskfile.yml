@@ -86,7 +86,7 @@ tasks:
         elif [ "$REGISTRY" = "dockerhub" ]; then
           echo "docker.io/$NAMESPACE/openserverless-admin-api"
         elif [ "$REGISTRY" = "apache" ]; then
-          echo "registry.hub.docker.com/apache/openserverless-admin-api"
+          echo "docker.io/apache/openserverless-admin-api"
         else
           echo "openserverless-admin-api"
         fi
