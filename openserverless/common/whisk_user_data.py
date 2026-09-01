@@ -117,9 +117,9 @@ class WhiskUserData:
         """
 
         wsku = {
-            "apiVersion": "nuvolaris.org/v1",
+            "apiVersion": "openserverless.org/v1",
             "kind": "WhiskUser",
-            "metadata": {"name": self._data["username"], "namespace": "nuvolaris"},
+            "metadata": {"name": self._data["username"], "namespace": "openserverless"},
             "spec": {
                 "email": self._data["email"],
                 "password": self._data["password"],

@@ -101,14 +101,14 @@ class KubeApiClient:
                 raise ConfigException("Token file exists but empty.")
             self.token = "Bearer " + content
 
-    def create_whisk_user(self, whisk_user_dict, namespace="nuvolaris"):
+    def create_whisk_user(self, whisk_user_dict, namespace="openserverless"):
         """ "
         Creates a whisk user using a POST operation
         param: whisk_user_dict a dictionary representing the whisksusers resource to create
-        param: namespace default to nuvolaris
+        param: namespace default to openserverless
         return: True if the operation is successfully, False otherwise
         """
-        url = f"{self.host}/apis/nuvolaris.org/v1/namespaces/{namespace}/whisksusers"
+        url = f"{self.host}/apis/openserverless.org/v1/namespaces/{namespace}/whisksusers"
         headers = {"Authorization": self.token}
 
         try:
@@ -141,14 +141,14 @@ class KubeApiClient:
             logging.error("create_whisk_user %s", ex)
             return False
 
-    def delete_whisk_user(self, username: str, namespace="nuvolaris"):
+    def delete_whisk_user(self, username: str, namespace="openserverless"):
         """ "
         Delete a whisk user using a DELETE operation
         param: username of the whisksusers resource to delete
-        param: namespace default to nuvolaris
+        param: namespace default to openserverless
         return: True if the operation is successfully, False otherwise
         """
-        url = f"{self.host}/apis/nuvolaris.org/v1/namespaces/{namespace}/whisksusers/{username}"
+        url = f"{self.host}/apis/openserverless.org/v1/namespaces/{namespace}/whisksusers/{username}"
         headers = {"Authorization": self.token}
 
         try:
@@ -170,14 +170,14 @@ class KubeApiClient:
             logging.error(f"delete_whisk_user {ex}")
             return False
 
-    def get_whisk_user(self, username: str, namespace="nuvolaris"):
+    def get_whisk_user(self, username: str, namespace="openserverless"):
         """ "
         Get a whisk user using a GET operation
         param: username of the whisksusers resource to delete
-        param: namespace default to nuvolaris
+        param: namespace default to openserverless
         return: a dictionary representing the existing user, None otherwise
         """
-        url = f"{self.host}/apis/nuvolaris.org/v1/namespaces/{namespace}/whisksusers/{username}"
+        url = f"{self.host}/apis/openserverless.org/v1/namespaces/{namespace}/whisksusers/{username}"
         headers = {"Authorization": self.token}
 
         try:
@@ -199,14 +199,14 @@ class KubeApiClient:
             logging.error(f"get_whisk_user {ex}")
             return None
 
-    def update_whisk_user(self, whisk_user_dict, namespace="nuvolaris"):
+    def update_whisk_user(self, whisk_user_dict, namespace="openserverless"):
         """ "
         Updates a whisk user using a PUT operation
         param: whisk_user_dict a dictionary representing the whisksusers resource to update
-        param: namespace default to nuvolaris
+        param: namespace default to openserverless
         return: True if the operation is successfully, False otherwise
         """
-        url = f"{self.host}/apis/nuvolaris.org/v1/namespaces/{namespace}/whisksusers/{whisk_user_dict['metadata']['name']}"
+        url = f"{self.host}/apis/openserverless.org/v1/namespaces/{namespace}/whisksusers/{whisk_user_dict['metadata']['name']}"
         headers = {"Authorization": self.token}
 
         try:
@@ -233,7 +233,7 @@ class KubeApiClient:
             logging.error(f"update_whisk_user {ex}")
             return False
         
-    def get_config_map(self, cm_name: str, namespace="nuvolaris"):
+    def get_config_map(self, cm_name: str, namespace="openserverless"):
         """
         Get a ConfigMap by name.
         :param cm_name: Name of the ConfigMap.
@@ -261,7 +261,7 @@ class KubeApiClient:
             logging.error(f"get_config_map {ex}")
             return None
     
-    def post_config_map(self, cm_name: str, file_or_dir: str, namespace="nuvolaris"):
+    def post_config_map(self, cm_name: str, file_or_dir: str, namespace="openserverless"):
         """        
         Create a ConfigMap from a file or directory.
         :param cm_name: Name of the ConfigMap.
@@ -314,7 +314,7 @@ class KubeApiClient:
             logging.error(f"post_config_map {ex}")
             return None
     
-    def delete_config_map(self, cm_name: str, namespace="nuvolaris"):
+    def delete_config_map(self, cm_name: str, namespace="openserverless"):
         """
         Delete a ConfigMap by name.
         :param cm_name: Name of the ConfigMap to delete.
@@ -343,7 +343,7 @@ class KubeApiClient:
             logging.error(f"delete_config_map {ex}")
             return False
      
-    def get_secret(self, secret_name: str, namespace="nuvolaris"):
+    def get_secret(self, secret_name: str, namespace="openserverless"):
         """
         Get a Kubernetes secret by name.
         :param secret_name: Name of the secret.
@@ -371,7 +371,7 @@ class KubeApiClient:
             logging.error(f"get_secret {ex}")
             return None
     
-    def post_secret(self, secret_name: str, secret_data: dict, type: str="Opaque", namespace="nuvolaris"):
+    def post_secret(self, secret_name: str, secret_data: dict, type: str="Opaque", namespace="openserverless"):
         """
         Create a Kubernetes secret.
         :param secret_name: Name of the secret.
@@ -424,7 +424,7 @@ class KubeApiClient:
             logging.error(f"post_secret {ex}")
             return None
     
-    def delete_secret(self, secret_name: str, namespace="nuvolaris"):
+    def delete_secret(self, secret_name: str, namespace="openserverless"):
         """
         Delete a Kubernetes secret.
         :param secret_name: Name of the secret to delete.
@@ -452,7 +452,7 @@ class KubeApiClient:
             logging.error(f"delete_secret {ex}")
             return False
         
-    def get_jobs(self, name_filter: str | None = None, namespace="nuvolaris"):
+    def get_jobs(self, name_filter: str | None = None, namespace="openserverless"):
         """
         Get all Kubernetes jobs in a specific namespace.
         :param name_filter: Optional filter to match job names.
@@ -485,7 +485,7 @@ class KubeApiClient:
             logging.error(f"get_jobs {ex}")
             return None
         
-    def delete_job(self, job_name: str, namespace="nuvolaris"):
+    def delete_job(self, job_name: str, namespace="openserverless"):
         """
         Delete a Kubernetes job by name.
         :param job_name: Name of the job to delete.
@@ -513,7 +513,7 @@ class KubeApiClient:
             logging.error(f"delete_job {ex}")
             return False
 
-    def post_job(self, job_manifest: dict, namespace="nuvolaris"):
+    def post_job(self, job_manifest: dict, namespace="openserverless"):
         """
         Create a Kubernetes job.
         :param job_manifest: Dictionary containing the job manifest. 
@@ -539,7 +539,7 @@ class KubeApiClient:
             logging.error(f"post_job {ex}")
             return None
 
-    def get_pod_by_job_name(self, job_name: str, namespace="nuvolaris"):
+    def get_pod_by_job_name(self, job_name: str, namespace="openserverless"):
         """
         Get the pod name associated with a job by its name.
         :param job_name: Name of the job.
@@ -570,7 +570,7 @@ class KubeApiClient:
             logging.error(f"get_pod_by_job_name {ex}")
             return None
 
-    def stream_pod_logs(self, pod_name: str, namespace="nuvolaris"):
+    def stream_pod_logs(self, pod_name: str, namespace="openserverless"):
         """
         Stream logs from a specific pod.
         :param pod_name: Name of the pod to stream logs from.
@@ -583,7 +583,7 @@ class KubeApiClient:
                 if line:
                     print(line.decode())
 
-    def check_job_status(self, job_name: str, namespace="nuvolaris"):
+    def check_job_status(self, job_name: str, namespace="openserverless"):
         """
         Check the status of a job by its name.
         :param job_name: Name of the job to check.
@@ -604,7 +604,7 @@ class KubeApiClient:
             logging.error(f"check_job_status {ex}")
             return False
 
-    def get_pod(self, pod_name: str, namespace="nuvolaris"):
+    def get_pod(self, pod_name: str, namespace="openserverless"):
         """
         Get pod details by name.
         :param pod_name: Name of the pod.
@@ -632,7 +632,7 @@ class KubeApiClient:
             logging.error(f"get_pod {ex}")
             return None
 
-    def wait_for_init_container_completion(self, job_name: str, init_container_name: str, namespace="nuvolaris", timeout_seconds=300):
+    def wait_for_init_container_completion(self, job_name: str, init_container_name: str, namespace="openserverless", timeout_seconds=300):
         """
         Wait for a specific init container in a job's pod to complete (successfully or with error).
         :param job_name: Name of the job.

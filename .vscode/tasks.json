@@ -29,7 +29,7 @@
         {
             "label": "Stop Port Forwards",
             "type": "shell",
-            "command": "test -f /tmp/pf-registry.pid && kill $(cat /tmp/pf-registry.pid) 2>/dev/null; test -f /tmp/pf-couchdb.pid && kill $(cat /tmp/pf-couchdb.pid) 2>/dev/null; rm -f /tmp/pf-registry.pid /tmp/pf-registry.log /tmp/pf-couchdb.pid /tmp/pf-couchdb.log; pkill -f 'kubectl port-forward -n nuvolaris registry-0' 2>/dev/null; pkill -f 'kubectl -n nuvolaris port-forward couchdb-0' 2>/dev/null; echo 'Port forwards stopped'; exit 0",
+            "command": "test -f /tmp/pf-registry.pid && kill $(cat /tmp/pf-registry.pid) 2>/dev/null; test -f /tmp/pf-couchdb.pid && kill $(cat /tmp/pf-couchdb.pid) 2>/dev/null; rm -f /tmp/pf-registry.pid /tmp/pf-registry.log /tmp/pf-couchdb.pid /tmp/pf-couchdb.log; pkill -f 'kubectl port-forward -n openserverless registry-0' 2>/dev/null; pkill -f 'kubectl -n openserverless port-forward couchdb-0' 2>/dev/null; echo 'Port forwards stopped'; exit 0",
             "presentation": {
                 "echo": true,
                 "reveal": "silent",

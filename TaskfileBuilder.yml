@@ -60,24 +60,24 @@ tasks:
   logs:
     desc: Show logs of the last build job
     cmds:
-      - kubectl -n nuvolaris logs $(kubectl get jobs.batch -o name | grep "build-") -c buildkit --follow
+      - kubectl -n openserverless logs $(kubectl get jobs.batch -o name | grep "build-") -c buildkit --follow
     silent: false
   
   cleanjobs:
     desc: Clean up old jobs
     cmds:
-      - for I in $(kubectl get jobs -n nuvolaris | grep build | awk '{ print $1 }' | tr "\n" " "); do kubectl delete job $I; done
-      - for I in $(kubectl get cm -n nuvolaris | grep "cm-" | awk '{ print $1 }' | tr "\n" " "); do kubectl delete cm $I; done
+      - for I in $(kubectl get jobs -n openserverless | grep build | awk '{ print $1 }' | tr "\n" " "); do kubectl delete job $I; done
+      - for I in $(kubectl get cm -n openserverless | grep "cm-" | awk '{ print $1 }' | tr "\n" " "); do kubectl delete cm $I; done
     silent: true
   
   updatetoml:
     desc: Update the buildkitd.toml file config map
     cmds:
       - |
-        if test $(kubectl -n nuvolaris get cm -o name | grep nuvolaris-buildkitd-conf | wc -l) -gt 0; 
-          then kubectl -n nuvolaris delete configmap nuvolaris-buildkitd-conf
+        if test $(kubectl -n openserverless get cm -o name | grep openserverless-buildkitd-conf | wc -l) -gt 0; 
+          then kubectl -n openserverless delete configmap openserverless-buildkitd-conf
         fi
-      - kubectl -n nuvolaris create configmap nuvolaris-buildkitd-conf --from-file=deploy/buildkit/buildkitd.toml
+      - kubectl -n openserverless create configmap openserverless-buildkitd-conf --from-file=deploy/buildkit/buildkitd.toml
     silent: true
 
   list-catalogs:

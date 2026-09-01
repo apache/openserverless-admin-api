@@ -22,8 +22,8 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "300"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
-  name: nuvolaris-system-api-ingress
-  namespace: nuvolaris
+  name: openserverless-system-api-ingress
+  namespace: openserverless
 spec:
   ingressClassName: nginx
   rules:
@@ -32,7 +32,7 @@ spec:
       paths:
       - backend:
           service:
-            name: nuvolaris-system-api
+            name: openserverless-system-api
             port:
               number: 5000
         path: /system

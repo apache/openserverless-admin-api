@@ -31,8 +31,8 @@ class UserValidation:
 
     def validate(self, namespace):
         """
-        Action to be invoked to validate the username. It checks that it respects nuvolaris rules and
-        that there is no user on current nuvolaris setup with that namespace assigned.
+        Action to be invoked to validate the username. It checks that it respects openserverless rules and
+        that there is no user on current openserverless setup with that namespace assigned.
         """
 
         try:

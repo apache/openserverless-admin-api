@@ -28,7 +28,7 @@ def ow_authorize(pass_user_data=False, kwargs_field_name="ow-auth-user"):
     """
     Decorator to be applied when a rest API endpoints must be validated against
     an OpenServerless OpenWhisk namespace credentials.
-    param: pass_user_data, set to true to pass the authenticated nuvolaris
+    param: pass_user_data, set to true to pass the authenticated openserverless
            namespace subject details into the wrapper function into the **kwargs
            dictionary
     param: kwargs_field_name, pass here the custom element name for the subject
