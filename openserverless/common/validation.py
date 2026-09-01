@@ -20,7 +20,7 @@ import re
 
 def is_valid_username(username):
     """
-    Verifies the given username follows nuvolaris rule
+    Verifies the given username follows openserverless rule
     >>> is_valid_username("bruno")
     True
     >>> is_valid_username("bruno123")

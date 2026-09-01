@@ -126,7 +126,7 @@ tasks:
       - |
         BASEIMG=$(task base-image-name)
         IMG="$BASEIMG:{{.TAG}}"
-        kind load docker-image $IMG --name=nuvolaris
+        kind load docker-image $IMG --name=openserverless
 
   utest:
     cmds:

@@ -22,8 +22,8 @@ metadata:
     traefik.ingress.kubernetes.io/transport.respondingTimeouts.idleTimeout: "600"
     traefik.ingress.kubernetes.io/transport.respondingTimeouts.readTimeout: "600"
     traefik.ingress.kubernetes.io/transport.respondingTimeouts.writeTimeout: "600"
-  name: nuvolaris-system-api-ingress
-  namespace: nuvolaris
+  name: openserverless-system-api-ingress
+  namespace: openserverless
 spec:
   rules:
   - host: ${SYS_API_HOSTNAME:-localhost}
@@ -31,7 +31,7 @@ spec:
       paths:
       - backend:
           service:
-            name: nuvolaris-system-api
+            name: openserverless-system-api
             port:
               number: 5000
         path: /system

@@ -74,7 +74,7 @@ class AuthService:
 
     def map_data(self, user_data):
         """
-        Map the internal nuvolaris user_data records to the auth response
+        Map the internal openserverless user_data records to the auth response
         """
         resp = {}
         resp["login"] = user_data["login"]
