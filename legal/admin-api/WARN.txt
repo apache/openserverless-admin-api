@@ -2,4 +2,14 @@ Apache OpenServerless Admin API binary licensing warnings
 
 This convenience image currently includes psycopg and psycopg-binary, which declare LGPL-3.0 licensing. LGPL is Category X under ASF policy. The image must not be released as an ASF convenience binary until this issue is resolved by the project and reviewed as appropriate.
 
-The Python environment is resolved from pyproject.toml during the image build rather than installed in frozen mode from uv.lock. Generate an SBOM from each final image digest and reconcile LICENSE and NOTICE before release.
+Image-level evidence was collected with Grant 0.6.8 using:
+
+    grant list docker.io/apache/openserverless-admin-api:0.9.0-incubating.2609030925-SNAPSHOT
+
+The tag resolved on 2026-09-03 to OCI index digest sha256:8e1d4d6bde95bfb585d378ee00df69ca3785cf3724dfed7af0d7a72cfac88bda, containing linux/amd64 manifest sha256:d45d67c3b103edb44eb3fe358f36156f6f2c67ead50f62b635cf712a59407920 and linux/arm64 manifest sha256:29a7f03d3f0e6aa9b7888fa9ef169db2efd0b9080b988fb029a33620d63180e8. The supplied Grant result records only the mutable tag, not the selected platform manifest, so both manifests must be scanned again by digest.
+
+After de-duplication by package ID, the scan reports 730 components: 118 Debian packages, 69 Python packages, 533 Rust crates detected in the uv executable, and 10 binaries. Grant found no license for 558 of those components. Its generic risk levels are not ASF Category A/B/X classifications and must not be used as an ASF compliance decision without a project policy and manual review.
+
+The image-level Python inventory differs materially from uv.lock: 23 package names appear only in the image, 19 only in the lock inventory, and 27 shared package names use a different version. The image also retains the uv cache, including setuptools-vendored autocommand 2.2.2, which declares LGPLv3. This confirms that the current build is not reproducible from uv.lock and adds another Category X candidate requiring removal or review.
+
+THIRD-PARTY.csv is generated from this Grant result and records detected licenses and evidence paths. It is an inventory, not a substitute for the required license texts and notices. Extract all referenced license and copyright files from each final platform image, resolve every missing or ambiguous result, and reconcile LICENSE and NOTICE before release.

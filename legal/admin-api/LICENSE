@@ -206,11 +206,12 @@
 BINARY DISTRIBUTION THIRD-PARTY COMPONENTS
 ========================================================================
 
-This convenience binary bundles third-party components. The component names,
-versions and declared licenses known from the source recipe are listed in the
-THIRD-PARTY.csv file stored alongside this LICENSE file. That file is part of
-this licensing information by reference. License and notice texts supplied by
-operating-system packages remain under /usr/share/doc where provided.
+This convenience binary bundles third-party components. Component names,
+versions, detected licenses, license references and in-image evidence paths
+from the available image scan are listed in the THIRD-PARTY.csv file stored
+alongside this LICENSE file. That file is part of this licensing information
+by reference. License and notice texts supplied by operating-system packages
+remain under /usr/share/doc where provided.
 
 WARN.txt records unresolved compatibility, provenance and reproducibility
 findings that must be reviewed against the final image or binary digest before
