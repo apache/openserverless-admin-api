@@ -1,0 +1,5 @@
+Apache OpenServerless Admin API binary licensing warnings
+
+This convenience image currently includes psycopg and psycopg-binary, which declare LGPL-3.0 licensing. LGPL is Category X under ASF policy. The image must not be released as an ASF convenience binary until this issue is resolved by the project and reviewed as appropriate.
+
+The Python environment is resolved from pyproject.toml during the image build rather than installed in frozen mode from uv.lock. Generate an SBOM from each final image digest and reconcile LICENSE and NOTICE before release.
