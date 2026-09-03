@@ -19,7 +19,7 @@
 version: '3'
 
 vars:
-  BASETAG: 0.1.0-incubating
+  BASETAG: 0.9.0-incubating
   COMMIT_ID:
     sh: git rev-parse --short HEAD
   TAG:
@@ -69,7 +69,7 @@ tasks:
       Create a new tag for the current git commit.      
     cmds:
       - git tag -d $(git tag)
-      - git tag -f {{.BASETAG}}.$(date +%y%m%d%H%M)
+      - git tag -f {{.BASETAG}}.$(date +%y%m%d%H%M)-SNAPSHOT
       - env PAGER= git tag
   
   base-image-name:
