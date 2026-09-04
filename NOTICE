@@ -1,6 +1,45 @@
-Apache OpenServerless (Incubating)
-Copyright 2024 The Apache Software Foundation
+Apache OpenServerless Admin API (Incubating)
+Copyright 2024-2026 The Apache Software Foundation
 
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
 
+Third-party components added by the Dockerfile
+------------------------------------------------
+
+Base image:
+- Python Docker Official Image, python:3.12-slim-bullseye
+
+Operating-system packages:
+- libpam-modules-bin
+- curl
+- telnet
+- inetutils-ping
+- zip
+- unzip
+
+Python dependency-management tool:
+- uv
+
+Direct application dependencies:
+- PyYAML
+- Jinja2
+- requests
+- flatdict
+- minio
+- backoff
+- psycopg-binary
+- psycopg
+- Flask
+- redis
+- auth0-python
+- Waitress
+- flasgger
+- Flask-Cors
+- cryptography
+- python-dotenv
+- bcrypt
+
+Required third-party attribution notices and license details are provided in
+LICENSE or in the referenced copyright/license material. WARN identifies
+components which are incompatible with, or require review under, ASF policy.
