@@ -17,8 +17,6 @@
 #
 FROM python:3.12-slim-bullseye
 
-COPY legal/admin-api/ /usr/share/doc/apache-openserverless/
-
 # Install system dependencies and uv
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpam-modules-bin \
