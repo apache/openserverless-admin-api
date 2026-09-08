@@ -16,4 +16,4 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-exec /home/openserverless/.venv/bin/python -m openserverless "$@"
+uv run -m openserverless "$@"

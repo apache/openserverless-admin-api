@@ -15,14 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-FROM python:3.12-slim-bullseye
+FROM python:3.12-slim-bookworm
+
+ARG ADMINAPI_IMAGE_DEFAULT=docker.io/apache/openserverless-admin-api
+ARG ADMINAPI_TAG_DEFAULT=latest
 
 # Install system dependencies and uv
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpam-modules-bin \
     curl \
-    telnet \
-    inetutils-ping \
     zip \
     unzip \
     && rm -rf /var/lib/apt/lists/*
@@ -32,24 +32,21 @@ RUN useradd -m -u 1001 -s /bin/bash openserverless
 WORKDIR /home/openserverless
 
 
+# Copy source code con permessi corretti
+ADD --chown=openserverless:openserverless openserverless /home/openserverless/openserverless/
+ADD --chown=openserverless:openserverless run.sh pyproject.toml uv.lock /home/openserverless/
+
 # Install uv (Python dependency manager)
 RUN pip install --no-cache-dir uv
 
-# Copy dependency metadata first so this layer remains cached when only source
-# code changes.
-COPY --chown=openserverless:openserverless pyproject.toml uv.lock /home/openserverless/
-
-# Resolve and download all runtime dependencies while building the image.
+# Install dependencies
 USER openserverless
-RUN uv sync --frozen --no-dev --no-install-project \
-    && rm -rf /home/openserverless/.cache/uv
+RUN uv venv && uv pip install --requirement pyproject.toml
 
-# Copy source code after dependencies have been installed.
-COPY --chown=openserverless:openserverless openserverless /home/openserverless/openserverless/
-COPY --chown=openserverless:openserverless run.sh /home/openserverless/run.sh
+# Apache release metadata (see DISCLAIMER, LICENSE, NOTICE, WARN)
+COPY DISCLAIMER LICENSE NOTICE  /
 
 ENV HOME=/home/openserverless
-ENV PATH="/home/openserverless/.venv/bin:${PATH}"
 EXPOSE 5000
 
-CMD ["python", "-m", "openserverless"]
+CMD ["uv", "run", "-m", "openserverless"]

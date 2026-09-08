@@ -73,17 +73,17 @@ class BuildService:
         
         self.build_config = build_config
 
-        # install the nuvolaris-buildkitd-conf ConfigMap if not present
-        cm = self.kube_client.get_config_map("nuvolaris-buildkitd-conf")
+        # install the openserverless-buildkitd-conf ConfigMap if not present
+        cm = self.kube_client.get_config_map("openserverless-buildkitd-conf")
         if cm is None:
-            logging.info("Adding nuvolaris-buildkitd-conf ConfigMap")
+            logging.info("Adding openserverless-buildkitd-conf ConfigMap")
             status = self.kube_client.post_config_map(
-                cm_name="nuvolaris-buildkitd-conf",
+                cm_name="openserverless-buildkitd-conf",
                 file_or_dir="deploy/buildkit/buildkitd.toml",
-                namespace="nuvolaris",
+                namespace="openserverless",
             )
             if status is None:
-                logging.error("Failed to create nuvolaris-buildkitd-conf ConfigMap")
+                logging.error("Failed to create openserverless-buildkitd-conf ConfigMap")
 
     def create_registry_secret(self, username: str, password: str, registry: str):
         randompart = ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
@@ -114,7 +114,7 @@ class BuildService:
             return user_registry_host
 
         # Try to get from OpenServerless config map
-        registry_host = 'nuvolaris-registry-svc:5000'  # Default fallback
+        registry_host = 'openserverless-registry-svc:5000'  # Default fallback
         ops_config_map = self.kube_client.get_config_map('config')
         if ops_config_map is not None:
             if 'annotations' in ops_config_map.get('metadata', {}):
@@ -300,7 +300,7 @@ class BuildService:
         init_container_completed = self.kube_client.wait_for_init_container_completion(
             job_name=self.job_name,
             init_container_name="copy-build-context",
-            namespace="nuvolaris",
+            namespace="openserverless",
             timeout_seconds=120  # 2 minutes should be enough for copying files
         )
 
@@ -419,8 +419,8 @@ class BuildService:
                         "restartPolicy": "Never",
                         "volumes": [
                             {
-                                "name": "nuvolaris-buildkitd-conf",
-                                "configMap": {"name": "nuvolaris-buildkitd-conf"},
+                                "name": "openserverless-buildkitd-conf",
+                                "configMap": {"name": "openserverless-buildkitd-conf"},
                             },
                             {
                                 "name": "build-context-vol",
@@ -477,7 +477,7 @@ class BuildService:
                                     { "name": "BUILDKIT_ROOTLESS", "value": "1" }
                                 ],
                                 "volumeMounts": [
-                                    { "name": "nuvolaris-buildkitd-conf", "mountPath": "/config" },
+                                    { "name": "openserverless-buildkitd-conf", "mountPath": "/config" },
                                     { "name": "workspace", "mountPath": "/workspace" },
                                     { "name": "docker-config", "mountPath": "/home/user/.docker" },
                                     { "name": "img-cache", "mountPath": "/tmp" },

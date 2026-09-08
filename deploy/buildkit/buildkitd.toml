@@ -30,7 +30,7 @@
 # =========================
 # Registry HTTP insicuro
 # =========================
-[registry."nuvolaris-registry-svc:5000"]
+[registry."openserverless-registry-svc:5000"]
   #insecure = true
   http = true
 

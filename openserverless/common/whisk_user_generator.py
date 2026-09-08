@@ -55,9 +55,9 @@ def generate_whisk_user_yaml(
     """
 
     return {
-        "apiVersion": "nuvolaris.org/v1",
+        "apiVersion": "openserverless.org/v1",
         "kind": "WhiskUser",
-        "metadata": {"name": username, "namespace": "nuvolaris"},
+        "metadata": {"name": username, "namespace": "openserverless"},
         "spec": {
             "email": email,
             "password": password,

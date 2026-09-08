@@ -32,8 +32,6 @@ dependencies = [
     "flatdict==4.1.0", # è l’ultima disponibile su PyPI
     "minio==7.1.13",
     "backoff==2.2.1", # ultima versione disponibile
-    "psycopg-binary==3.1.18",
-    "psycopg==3.1.18",
     "flask>=3.1.1",
     "redis>=5.2.0",
     "auth0-python>=4.9.0",

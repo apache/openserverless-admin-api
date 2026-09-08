@@ -1,0 +1,122 @@
+==============================================================================
+WARN -- Apache License 2.0 incompatibilities
+Container image: apache/openserverless-admin-api
+==============================================================================
+
+This file lists third-party components bundled by the Dockerfile beside
+it whose licenses are NOT compatible with the Apache License, Version 2.0,
+together with components that require special handling.
+
+Classification follows the ASF third-party licensing policy:
+
+    https://www.apache.org/legal/resolved.html
+
+  Category A  Apache-2.0 compatible. May be included in a release.
+  Category B  May be included in BINARY form only, unmodified and as a
+              separate file, with the reciprocal license disclosed.
+  Category X  MUST NOT be included in an Apache release artifact.
+
+IMPORTANT SCOPE NOTE
+------------------------------------------------------------------------------
+The Apache release artifact for OpenServerless is the SOURCE distribution,
+which contains this Dockerfile and the files beside it -- all Apache-2.0
+licensed. The published container image is a CONVENIENCE BINARY assembled
+at build time from third-party base images and package repositories.
+Category X components inherited from a base operating system image are
+disclosed below but are not redistributed by the ASF in source form.
+Category X components that this Dockerfile ADDS on purpose must be removed.
+
+
+==============================================================================
+CATEGORY X
+==============================================================================
+
+  None. This Dockerfile no longer adds any Category X component. The LGPL
+  `psycopg` / `psycopg-binary` dependencies and the `telnet` / `inetutils-ping`
+  packages that were previously listed here have been removed; see CATEGORY A
+  below for the details of each resolution.
+
+
+==============================================================================
+CATEGORY X (as bundled)
+==============================================================================
+
+  Component : libpam-modules-bin
+  License   : GPL-2.0-or-later AND BSD-3-Clause
+  Category  : X (as bundled)
+  Action    :
+      GPL-2.0 components arrive from the base operating system. This Dockerfile no
+      longer installs `libpam-modules-bin` explicitly -- it has been REMOVED from the
+      apt install list, since nothing in this service uses PAM authentication. The
+      package is nevertheless still present in the image because the upstream
+      python:3.12-slim-bookworm base image ships libpam-modules, libpam-modules-bin,
+      libpam-runtime and libpam0g as part of the Debian userland. It is therefore
+      inherited, not added, and is disclosed here on that basis. No further action
+      required.
+
+  Component : Debian/Ubuntu/Alpine base image userland
+  License   : mixed, incl. GPL-2.0/GPL-3.0
+  Category  : X (as bundled)
+  Action    :
+      The base image contains GPL-licensed operating-system components. The Apache release
+      artifact is the SOURCE (this Dockerfile and the files beside it); the published
+      container image is a convenience binary assembled from third-party base images.
+      No action required beyond this disclosure.
+
+
+==============================================================================
+CATEGORY B
+==============================================================================
+
+  Component : certifi / ca-certificates
+  License   : MPL-2.0
+  Category  : B
+  Action    :
+      Category B: MPL-2.0 may be included in binary form only, unmodified and as a
+      separate file. That is satisfied here. No action required.
+
+  Component : waitress
+  License   : ZPL-2.1
+  Category  : B
+  Action    :
+      Category B: the Zope Public License 2.1 may be included in binary form only,
+      unmodified and as a separate file. That is satisfied here. No action required.
+
+
+==============================================================================
+CATEGORY A
+==============================================================================
+
+  Component : zip / unzip (Info-ZIP)
+  License   : Info-ZIP License
+  Category  : A
+  Action    :
+      BSD-like and Apache-compatible. No action required.
+
+  Component : curl
+  License   : curl (MIT-like)
+  Category  : A
+  Action    :
+      Apache-compatible. The `telnet` and `inetutils-ping` packages previously
+      installed beside it have been REMOVED from the Dockerfile: they were
+      debugging conveniences and nothing in the service invokes them.
+      No action required.
+
+  Component : PostgreSQL client (formerly psycopg / psycopg-binary)
+  License   : n/a -- dependency removed
+  Category  : A
+  Action    :
+      The LGPL `psycopg` and `psycopg-binary` dependencies have been REMOVED from
+      pyproject.toml and uv.lock. No module in this service imported them: the
+      admin API persists its data in CouchDB, and the `postgres_*` fields it
+      handles are configuration values written into WhiskUser custom resources,
+      which the operator acts on. No PostgreSQL driver is required here.
+      No action required.
+
+
+==============================================================================
+SUMMARY OF REQUIRED REMOVALS (Category X added by this Dockerfile)
+==============================================================================
+
+  (none -- all Category X components added by this Dockerfile have been removed)
+

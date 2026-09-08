@@ -19,11 +19,16 @@
 version: '3'
 
 vars:
-  BASETAG: 0.9.1-incubating
+  BASETAG: 0.9.0-incubating
+  SUFFIX: "-snapshot"
   COMMIT_ID:
     sh: git rev-parse --short HEAD
+  # taken from the tag - overridable with ADMINAPI_TAG env var
   TAG:
-    sh: git describe --tags --abbrev=0 2>/dev/null || echo latest
+    sh: echo "${ADMINAPI_TAG:-$(git describe --tags --abbrev=0 2>/dev/null || git rev-parse --short HEAD)}"
+  # taken from the Dockerfile - overridable with MY_ADMINAPI_IMAGE env var
+  ADMINAPI_IMAGE:
+    sh: echo "${MY_ADMINAPI_IMAGE:-$(awk -F= '/ARG ADMINAPI_IMAGE_DEFAULT=/ { print $2 ; exit }' Dockerfile)}"
 
 dotenv:
  - .env  
@@ -36,59 +41,68 @@ includes:
 
 tasks:
 
-  docker-login-ghcr: >
+  docker-login-ghcr:
     silent: true
-    cmds: 
+    cmds:
       - |
         echo "Logging in to ghcr.io as $GITHUB_USER"
         echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin
-  
+
   docker-login-dockerhub:
     silent: true
-    cmds: 
+    cmds:
       - |
-        echo "Logging in to dockerhub as $DOCKERHUB_USER"
-        echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USER --password-stdin
+        echo "Logging in to docker.io as $DOCKERHUB_USER"
+        echo $DOCKERHUB_TOKEN | docker login docker.io -u $DOCKERHUB_USER --password-stdin
 
   docker-login:
     desc: |
-      Login to the docker registry. Set REGISTRY=ghcr or REGISTRY=dockerhub in .env
-      to use the respective registry.
+      Login to the registry the image name points to: docker.io for apache images,
+      ghcr.io otherwise.
     silent: true
     cmds:
       - |
-        if [ -z "$REGISTRY" ]; then
-          echo "Error: REGISTRY variable is not set in .env"
-          exit 1
-        fi
-        task docker-login-$REGISTRY
-  
-  image-tag:
-    silent: true
+        IMG="${MY_ADMINAPI_IMAGE:-{{.ADMINAPI_IMAGE}}}"
+        case "$IMG" in
+          ghcr.io/*) task docker-login-ghcr ;;
+          *)         task docker-login-dockerhub ;;
+        esac
+
+  image:
     desc: |
-      Create a new tag for the current git commit.      
-    cmds:
-      - git tag -d $(git tag)
-      - git tag -f {{.BASETAG}}.$(date +%y%m%d%H%M)
-      - env PAGER= git tag
-  
-  base-image-name:
+      Print the image name that would be built.
     silent: true
     cmds:
+      - echo "AdminApi=${MY_ADMINAPI_IMAGE:-{{.ADMINAPI_IMAGE}}}:{{.TAG}}"
+
+  # deprecated - use task tag
+  image-tag:
+    desc: "[deprecated] use task tag"
+    silent: true
+    cmds:
+      - 'echo "deprecated, use task tag"'
+
+  tag:
+    desc: |
+      Create a new snapshot tag for the current git commit.
+      NOTE: this deletes the existing local tags first - snapshot tags are disposable.
+    silent: true
+    vars:
+      TS:
+        sh: date '+%y %m %d %H %M' | awk '{printf "%s%s%02d%s%02d\n", $1, substr("abcdefghijkl",$2+0,1), $3, substr("abcdefghijklmnopqrstuvwx",$4+1,1), $5}'
+    cmds:
+      - git tag -d $(git tag) 2>/dev/null || true
       - |
-        if [ -n "$REGISTRY" ] && [ -z "$NAMESPACE" ]; then
-          echo "Error: NAMESPACE variable is not set in .env"
-          exit 1
-        fi
-        if [ "$REGISTRY" = "ghcr" ]; then
-          echo "ghcr.io/$NAMESPACE/openserverless-admin-api"
-        elif [ "$REGISTRY" = "dockerhub" ]; then
-          echo "docker.io/$NAMESPACE/openserverless-admin-api"
-        elif [ "$REGISTRY" = "apache" ]; then
-          echo "registry.hub.docker.com/apache/openserverless-admin-api"
-        else
-          echo "openserverless-admin-api"
-        fi
+        TAG="{{.BASETAG}}.{{.TS}}{{.SUFFIX}}"
+        git tag -f $TAG
+        echo New tag $TAG
+
+  ci:
+    desc: |
+      Push the tags, starting the GitHub Actions build on the repo that received them.
+      This does not build anything locally.
+    cmds:
+      - git push --tags
 
   buildx:
     desc: |
@@ -96,27 +110,26 @@ tasks:
     silent: true
     cmds:
       - |
-        BASEIMG=$(task base-image-name)
-        IMG="$BASEIMG:{{.TAG}}"
+        IMG="${MY_ADMINAPI_IMAGE:-{{.ADMINAPI_IMAGE}}}:{{.TAG}}"
         if [ -n "{{.PUSH}}" ]; then
-          if [ -z "$REGISTRY" ]; then
-            echo "Error: REGISTRY variable must be set in .env to push the image"
-            exit 1
-          fi
-          {{.DRY}} docker buildx build -t $IMG --platform linux/amd64,linux/arm64 . --push
+          {{.DRY}} docker buildx build -t "$IMG" \
+            --build-arg ADMINAPI_IMAGE_DEFAULT="${MY_ADMINAPI_IMAGE:-{{.ADMINAPI_IMAGE}}}" \
+            --build-arg ADMINAPI_TAG_DEFAULT="{{.TAG}}" \
+            --platform linux/amd64,linux/arm64 . --push
         else
-          {{.DRY}} docker buildx build -t $IMG . --load
+          {{.DRY}} docker buildx build -t "$IMG" \
+            --build-arg ADMINAPI_IMAGE_DEFAULT="${MY_ADMINAPI_IMAGE:-{{.ADMINAPI_IMAGE}}}" \
+            --build-arg ADMINAPI_TAG_DEFAULT="{{.TAG}}" \
+            . --load
         fi
-  
+        echo "Built $IMG"
+
   build:
     silent: true
-    desc: Build the image locally
+    desc: Build the docker image locally and load it into the local docker daemon.
     cmds:
       - uv lock --upgrade
-      - |
-        BASEIMG=$(task base-image-name)
-        IMG="$BASEIMG:{{.TAG}}"
-        docker build . -t $IMG --load
+      - task: buildx
 
   build-and-load:
     silent: true
@@ -124,9 +137,8 @@ tasks:
     cmds:
       - task: build
       - |
-        BASEIMG=$(task base-image-name)
-        IMG="$BASEIMG:{{.TAG}}"
-        kind load docker-image $IMG --name=nuvolaris
+        IMG="${MY_ADMINAPI_IMAGE:-{{.ADMINAPI_IMAGE}}}:{{.TAG}}"
+        kind load docker-image $IMG --name=openserverless
 
   utest:
     cmds:

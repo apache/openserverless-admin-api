@@ -22,18 +22,18 @@ set -e
 echo "$(date): Starting port forwards..." >> /tmp/pf-start.log
 
 # Clean up any existing port forwards first
-pkill -f 'kubectl port-forward -n nuvolaris registry-0' 2>/dev/null || true
-pkill -f 'kubectl -n nuvolaris port-forward couchdb-0' 2>/dev/null || true
+pkill -f 'kubectl port-forward -n openserverless registry-0' 2>/dev/null || true
+pkill -f 'kubectl -n openserverless port-forward couchdb-0' 2>/dev/null || true
 rm -f /tmp/pf-registry.pid /tmp/pf-couchdb.pid /tmp/pf-registry.log /tmp/pf-couchdb.log
 sleep 1
 
 # Start port forwards in background with nohup to detach from terminal
-nohup kubectl port-forward -n nuvolaris registry-0 5000:5000 > /tmp/pf-registry.log 2>&1 &
+nohup kubectl port-forward -n openserverless registry-0 5000:5000 > /tmp/pf-registry.log 2>&1 &
 REGISTRY_PID=$!
 echo $REGISTRY_PID > /tmp/pf-registry.pid
 echo "$(date): Registry PID: $REGISTRY_PID" >> /tmp/pf-start.log
 
-nohup kubectl -n nuvolaris port-forward couchdb-0 5984:5984 > /tmp/pf-couchdb.log 2>&1 &
+nohup kubectl -n openserverless port-forward couchdb-0 5984:5984 > /tmp/pf-couchdb.log 2>&1 &
 COUCHDB_PID=$!
 echo $COUCHDB_PID > /tmp/pf-couchdb.pid
 echo "$(date): CouchDB PID: $COUCHDB_PID" >> /tmp/pf-start.log

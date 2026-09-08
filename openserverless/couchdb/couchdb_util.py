@@ -24,7 +24,7 @@ class CouchDB:
     def __init__(self, environ=os.environ):
         self._environ = environ
         self.db_protocol = "http"
-        self.db_prefix = "nuvolaris_"
+        self.db_prefix = "openserverless_"
 
         self.db_port = environ.get("COUCHDB_SERVICE_PORT", "5984")
         self.db_host = environ.get("COUCHDB_SERVICE_HOST", "localhost")
