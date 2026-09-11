@@ -43,3 +43,5 @@ jobs:
       - name: Unit Tests
         run: task utest
         continue-on-error: false
+      - name: SSO and legacy authentication tests
+        run: task utest-sso

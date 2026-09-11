@@ -148,3 +148,8 @@ tasks:
             uv run python3 -m doctest -o ELLIPSIS $test {{.CLI_ARGS}}
         done
     silent: true
+
+  utest-sso:
+    desc: test OIDC flows and legacy authentication compatibility without a cluster
+    cmds:
+      - uv run python3 -m unittest discover -s tests -v
