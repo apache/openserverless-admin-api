@@ -1,182 +1,151 @@
 Apache OpenServerless (Incubating)
-Copyright 2024 The Apache Software Foundation
+Copyright 2024-2026 The Apache Software Foundation
 
 This product includes software developed at
-The Apache Software Foundation (http://www.apache.org/).
+The Apache Software Foundation (https://www.apache.org/).
 
+The following notices apply to third-party software bundled in the
+container image built from the Dockerfile beside this file
+(docker.io/apache/openserverless-admin-api). They do not apply to the
+Apache source release, which contains only Apache-2.0 licensed files.
 
-==============================================================================
-BEGIN BUNDLED THIRD-PARTY SOFTWARE INVENTORY (container image)
-==============================================================================
+---------------
 
-------------------------------------------------------------------------------
-Container image: apache/openserverless-admin-api
-------------------------------------------------------------------------------
+The container image contains the CPython runtime and standard library,
+obtained from the python:3.12-slim-bookworm base image, which was released
+under the Python Software Foundation License Version 2.
 
-This image bundles third-party software. The components below are
-redistributed under the licenses recorded in the LICENSE file that
-accompanies this NOTICE. Components flagged '*** SEE WARN ***' are
-listed in the WARN file as incompatible with the Apache License 2.0.
+Copyright (c) 2001-2026 Python Software Foundation. All Rights Reserved.
+Copyright (c) 2000 BeOpen.com. All Rights Reserved.
+Copyright (c) 1995-2001 Corporation for National Research Initiatives.
+All Rights Reserved.
+Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam.
+All Rights Reserved.
 
-Python runtime dependencies (pyproject.toml / uv.lock)
-------------------------------------------------------
-  * aiohappyeyeballs (2.6.1)
-      License: PSF-2.0
-  * aiohttp (3.14.3)
-      License: Apache-2.0 AND MIT
-  * aiosignal (1.4.0)
-      License: Apache-2.0
-  * asttokens (3.0.1)
-      License: Apache-2.0
-  * attrs (25.4.0)
-      License: MIT
-  * auth0-python (4.13.0)
-      License: MIT
-  * backoff (2.2.1)
-      License: MIT
-  * bcrypt (5.0.0)
-      License: Apache-2.0
-  * blinker (1.9.0)
-      License: MIT
-  * certifi (2025.11.12)
-      License: MPL-2.0
-      Category B: used unmodified, as a separate file.
-  * cffi (2.0.0)
-      License: MIT
-  * charset-normalizer (3.4.4)
-      License: MIT
-  * click (8.3.1)
-      License: BSD-3-Clause
-  * colorama (0.4.6)
-      License: BSD-3-Clause
-  * cryptography (50.0.0)
-      License: Apache-2.0 OR BSD-3-Clause
-  * decorator (5.2.1)
-      License: BSD-2-Clause
-  * executing (2.2.1)
-      License: MIT
-  * flasgger (0.9.7.1)
-      License: MIT
-  * flask (3.1.2)
-      License: BSD-3-Clause
-  * flask-cors (6.0.1)
-      License: MIT
-  * flatdict (4.1.0)
-      License: BSD-3-Clause
-  * frozenlist (1.8.0)
-      License: Apache-2.0
-  * idna (3.15)
-      License: BSD-3-Clause
-  * ipython (9.8.0)
-      License: BSD-3-Clause
-      Dev-only dependency.
-  * ipython-pygments-lexers (1.1.1)
-      License: BSD-3-Clause
-      Dev-only dependency.
-  * itsdangerous (2.2.0)
-      License: BSD-3-Clause
-  * jedi (0.19.2)
-      License: MIT
-  * jinja2 (3.1.6)
-      License: BSD-3-Clause
-  * jsonschema (4.25.1)
-      License: MIT
-  * jsonschema-specifications (2025.9.1)
-      License: MIT
-  * markupsafe (3.0.3)
-      License: BSD-3-Clause
-  * matplotlib-inline (0.2.1)
-      License: BSD-3-Clause
-  * minio (7.1.13)
-      License: Apache-2.0
-  * mistune (3.3.0)
-      License: BSD-3-Clause
-  * multidict (6.7.0)
-      License: Apache-2.0
-  * packaging (25.0)
-      License: Apache-2.0 OR BSD-2-Clause
-  * parso (0.8.5)
-      License: MIT
-  * pexpect (4.9.0)
-      License: ISC
-  * prompt-toolkit (3.0.52)
-      License: BSD-3-Clause
-  * propcache (0.4.1)
-      License: Apache-2.0
-  * ptyprocess (0.7.0)
-      License: ISC
-  * pure-eval (0.2.3)
-      License: MIT
-  * pycparser (2.23)
-      License: BSD-3-Clause
-  * pygments (2.19.2)
-      License: BSD-2-Clause
-  * pyjwt (2.13.0)
-      License: MIT
-  * python-dotenv (1.2.2)
-      License: BSD-3-Clause
-  * pyyaml (6.0.3)
-      License: MIT
-  * redis (7.1.0)
-      License: MIT
-  * referencing (0.37.0)
-      License: MIT
-  * requests (2.32.5)
-      License: Apache-2.0
-  * rpds-py (0.30.0)
-      License: MIT
-  * six (1.17.0)
-      License: MIT
-  * stack-data (0.6.3)
-      License: MIT
-  * traitlets (5.14.3)
-      License: BSD-3-Clause
-  * typing-extensions (4.15.0)
-      License: PSF-2.0
-  * urllib3 (2.7.0)
-      License: MIT
-  * waitress (3.0.2)
-      License: ZPL-2.1
-      Category B: used unmodified, as a separate file.
-  * wcwidth (0.2.14)
-      License: MIT
-  * werkzeug (3.1.4)
-      License: BSD-3-Clause
-  * yarl (1.22.0)
-      License: Apache-2.0
+---------------
 
-Operating-system packages installed by the Dockerfile
------------------------------------------------------
-  * uv (latest)
-      License: Apache-2.0 OR MIT
-      Python dependency manager, installed via pip.
-  * curl ((Debian bookworm))
-      License: curl (MIT-like)
-  * zip, unzip ((Debian bookworm))
-      License: Info-ZIP
+The container image contains uv, installed by the Dockerfile via pip,
+which was released under the Apache 2.0 license.
 
-Base operating system image
----------------------------
-  * (see the FROM line of the Dockerfile) (-)
-      License: mixed; see WARN
-      Operating-system components are supplied by the upstream base image and are not
-      redistributed by the ASF in source form.
-  * libpam-modules, libpam-modules-bin, libpam-runtime, libpam0g ((Debian bookworm))
-      License: GPL-2.0-or-later AND BSD-3-Clause
-      Shipped by the upstream base image; not installed by this Dockerfile.
-      *** SEE WARN ***
+uv
+Copyright (c) Astral Software Inc.
 
-------------------------------------------------------------------------------
-Attribution required by bundled components
-------------------------------------------------------------------------------
+---------------
 
-This product includes software developed by the Apache Software
-Foundation (http://www.apache.org/), including Apache OpenWhisk
-components and Apache-2.0 licensed libraries listed above.
+The container image contains aiohttp, which was released under an
+Apache 2.0 license.
 
-This product includes software developed by third parties under the
-MIT, BSD, ISC, PSF, MPL-2.0 and other licenses, as recorded in LICENSE.
+aiohttp
+Copyright aio-libs contributors
 
-==============================================================================
-END BUNDLED THIRD-PARTY SOFTWARE INVENTORY
-==============================================================================
+aiohttp bundles llhttp, which was released under an MIT license.
+
+Copyright (c) 2018 Fedor Indutny
+
+---------------
+
+The container image contains aiosignal and frozenlist, which were
+released under an Apache 2.0 license.
+
+Copyright 2013-2019 Nikolay Kim and Andrew Svetlov
+
+---------------
+
+The container image contains multidict, which was released under an
+Apache 2.0 license.
+
+Copyright 2016 Andrew Svetlov and aio-libs contributors
+
+---------------
+
+The container image contains propcache and yarl, which were released
+under an Apache 2.0 license.
+
+Copyright 2016-2021, Andrew Svetlov and aio-libs team
+
+---------------
+
+---------------
+
+The container image contains bcrypt, which was released under an
+Apache 2.0 license.
+
+Copyright (c) The Python Cryptographic Authority developers
+
+---------------
+
+The container image contains minio, which was released under an
+Apache 2.0 license.
+
+MinIO Python SDK for Amazon S3 Compatible Cloud Storage
+(C) 2015-2021 MinIO, Inc.
+
+---------------
+
+The container image contains requests, which was released under an
+Apache 2.0 license.
+
+Requests
+Copyright Kenneth Reitz
+
+---------------
+
+The container image contains cryptography, which was released under
+an Apache 2.0 license and a 3-clause BSD license, at the recipient's
+option.
+
+Copyright (c) Individual contributors.
+All rights reserved.
+
+---------------
+
+The container image contains packaging, which was released under an
+Apache 2.0 license and a 2-clause BSD license, at the recipient's
+option.
+
+Copyright (c) Donald Stufft and individual contributors.
+All rights reserved.
+
+---------------
+
+The container image contains curl, obtained from the Debian bookworm
+userland of the base image, which was released under an MIT-like
+license.
+
+Copyright (c) 1996 - 2026, Daniel Stenberg, <daniel@haxx.se>, and many
+contributors, see the THANKS file.
+
+---------------
+
+The container image contains zip and unzip, obtained from the Debian
+bookworm userland of the base image, which were released under the
+Info-ZIP license.
+
+Copyright (c) 1990-2009 Info-ZIP. All rights reserved.
+
+---------------
+
+The container image contains certifi, which distributes a modified
+version of the Mozilla CA root certificate bundle under the Mozilla
+Public License 2.0.
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---------------
+
+The container image contains waitress, which was released under the
+Zope Public License 2.1.
+
+Copyright (c) Zope Foundation and Contributors.
+All Rights Reserved.
+
+---------------
+
+The container image inherits GPL-2.0-or-later and other reciprocally
+licensed operating-system components from the python:3.12-slim-bookworm
+base image, including libpam-modules, libpam-modules-bin,
+libpam-runtime and libpam0g. These components are supplied by the
+upstream base image and are not redistributed by the ASF in source
+form. See the WARN file beside this NOTICE.

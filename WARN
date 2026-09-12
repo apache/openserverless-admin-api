@@ -1,122 +1,271 @@
 ==============================================================================
-WARN -- Apache License 2.0 incompatibilities
-Container image: apache/openserverless-admin-api
+WARN -- warnings concerning LICENSE and NOTICE for the container image
+Container image: docker.io/apache/openserverless-admin-api
 ==============================================================================
 
-This file lists third-party components bundled by the Dockerfile beside
-it whose licenses are NOT compatible with the Apache License, Version 2.0,
-together with components that require special handling.
+This file records warnings raised while regenerating the LICENSE and NOTICE
+files beside it for the container image built from the Dockerfile. It is not
+itself a license document.
 
-Classification follows the ASF third-party licensing policy:
-
-    https://www.apache.org/legal/resolved.html
+ASF third-party licensing policy: https://www.apache.org/legal/resolved.html
 
   Category A  Apache-2.0 compatible. May be included in a release.
   Category B  May be included in BINARY form only, unmodified and as a
               separate file, with the reciprocal license disclosed.
   Category X  MUST NOT be included in an Apache release artifact.
 
-IMPORTANT SCOPE NOTE
-------------------------------------------------------------------------------
+
+==============================================================================
+SCOPE
+==============================================================================
+
 The Apache release artifact for OpenServerless is the SOURCE distribution,
-which contains this Dockerfile and the files beside it -- all Apache-2.0
-licensed. The published container image is a CONVENIENCE BINARY assembled
-at build time from third-party base images and package repositories.
-Category X components inherited from a base operating system image are
-disclosed below but are not redistributed by the ASF in source form.
-Category X components that this Dockerfile ADDS on purpose must be removed.
+which contains the Dockerfile and the files beside it -- all Apache-2.0
+licensed. The published container image is a CONVENIENCE BINARY assembled at
+build time from a third-party base image and from package repositories.
+LICENSE and NOTICE now cover both: the license above the first separator
+applies to the source release, and each section below a separator applies to
+software bundled only in the image.
 
 
 ==============================================================================
-CATEGORY X
+WARN 1 -- LICENSE and NOTICE were regenerated, previous content replaced
 ==============================================================================
 
-  None. This Dockerfile no longer adds any Category X component. The LGPL
-  `psycopg` / `psycopg-binary` dependencies and the `telnet` / `inetutils-ping`
-  packages that were previously listed here have been removed; see CATEGORY A
-  below for the details of each resolution.
-
-
-==============================================================================
-CATEGORY X (as bundled)
-==============================================================================
-
-  Component : libpam-modules-bin
-  License   : GPL-2.0-or-later AND BSD-3-Clause
-  Category  : X (as bundled)
-  Action    :
-      GPL-2.0 components arrive from the base operating system. This Dockerfile no
-      longer installs `libpam-modules-bin` explicitly -- it has been REMOVED from the
-      apt install list, since nothing in this service uses PAM authentication. The
-      package is nevertheless still present in the image because the upstream
-      python:3.12-slim-bookworm base image ships libpam-modules, libpam-modules-bin,
-      libpam-runtime and libpam0g as part of the Debian userland. It is therefore
-      inherited, not added, and is disclosed here on that basis. No further action
-      required.
-
-  Component : Debian/Ubuntu/Alpine base image userland
-  License   : mixed, incl. GPL-2.0/GPL-3.0
-  Category  : X (as bundled)
-  Action    :
-      The base image contains GPL-licensed operating-system components. The Apache release
-      artifact is the SOURCE (this Dockerfile and the files beside it); the published
-      container image is a convenience binary assembled from third-party base images.
-      No action required beyond this disclosure.
+  Severity : informational
+  Detail   :
+      The previous LICENSE and NOTICE carried a summary-table inventory with
+      per-component license identifiers but NOT the license texts themselves;
+      they pointed at paths inside the image instead. They have been rewritten
+      in the style of the Apache Pekko LICENSE and NOTICE: Apache-2.0 text
+      first, then '---------------' separated sections, with the full text of
+      every non-Apache-2.0 license reproduced inline.
+  Action   :
+      Review the diff before cutting the release.
 
 
 ==============================================================================
-CATEGORY B
+WARN 2 -- previous inventory listed packages that are NOT in the image
 ==============================================================================
 
-  Component : certifi / ca-certificates
-  License   : MPL-2.0
-  Category  : B
-  Action    :
-      Category B: MPL-2.0 may be included in binary form only, unmodified and as a
-      separate file. That is satisfied here. No action required.
+  Severity : correctness (resolved in the regenerated files)
+  Detail   :
+      The previous LICENSE/NOTICE listed 59 Python packages. The Dockerfile
+      runs `uv pip install --requirement pyproject.toml`, which installs the
+      default dependency group only -- the `dev` extra is never installed.
+      Resolving pyproject.toml against uv.lock yields 43 packages.
 
-  Component : waitress
-  License   : ZPL-2.1
-  Category  : B
-  Action    :
-      Category B: the Zope Public License 2.1 may be included in binary form only,
-      unmodified and as a separate file. That is satisfied here. No action required.
+      The following were listed but are NOT present in the runtime image and
+      have been REMOVED from LICENSE and NOTICE:
 
+          asttokens, colorama, decorator, executing, ipython,
+          ipython-pygments-lexers, jedi, matplotlib-inline, parso, pexpect,
+          prompt-toolkit, ptyprocess, pure-eval, pygments, stack-data,
+          traitlets, wcwidth
 
-==============================================================================
-CATEGORY A
-==============================================================================
-
-  Component : zip / unzip (Info-ZIP)
-  License   : Info-ZIP License
-  Category  : A
-  Action    :
-      BSD-like and Apache-compatible. No action required.
-
-  Component : curl
-  License   : curl (MIT-like)
-  Category  : A
-  Action    :
-      Apache-compatible. The `telnet` and `inetutils-ping` packages previously
-      installed beside it have been REMOVED from the Dockerfile: they were
-      debugging conveniences and nothing in the service invokes them.
-      No action required.
-
-  Component : PostgreSQL client (formerly psycopg / psycopg-binary)
-  License   : n/a -- dependency removed
-  Category  : A
-  Action    :
-      The LGPL `psycopg` and `psycopg-binary` dependencies have been REMOVED from
-      pyproject.toml and uv.lock. No module in this service imported them: the
-      admin API persists its data in CouchDB, and the `postgres_*` fields it
-      handles are configuration values written into WhiskUser custom resources,
-      which the operator acts on. No PostgreSQL driver is required here.
-      No action required.
+      Over-disclosure is not a license violation, but it misstates the
+      contents of the artifact and drags in licenses (ISC, BSD-2-Clause)
+      that nothing in the image actually uses.
+  Action   :
+      None required. Note that if the Dockerfile is ever changed to install
+      the dev extra, these packages must be restored.
 
 
 ==============================================================================
-SUMMARY OF REQUIRED REMOVALS (Category X added by this Dockerfile)
+WARN 3 -- cffi is MIT No Attribution, not MIT
 ==============================================================================
 
-  (none -- all Category X components added by this Dockerfile have been removed)
+  Severity : correctness (resolved in the regenerated files)
+  Category : A
+  Detail   :
+      The previous inventory recorded cffi (2.0.0) as plain MIT. The license
+      file shipped in cffi-2.0.0.dist-info/licenses/LICENSE is "MIT No
+      Attribution" (MIT-0), a distinct, more permissive license. It is now
+      reproduced in its own LICENSE section.
+  Action   :
+      None required. Both are Category A.
 
+
+==============================================================================
+WARN 4 -- CPython itself was never disclosed
+==============================================================================
+
+  Severity : omission (resolved in the regenerated files)
+  Category : A
+  Detail   :
+      The image is built `FROM python:3.12-slim-bookworm` and ships the CPython
+      runtime and standard library, which are the single largest bundled
+      third-party component. Neither the previous LICENSE nor the previous
+      NOTICE mentioned CPython or the Python Software Foundation License.
+      The PSF License Version 2 text is now reproduced in LICENSE and the PSF
+      copyright chain is recorded in NOTICE.
+  Action   :
+      None required.
+
+
+==============================================================================
+WARN 5 -- Category X inherited from the base image (GPL-2.0-or-later)
+==============================================================================
+
+  Severity : disclosure required
+  Category : X (as bundled)
+  Components:
+      libpam-modules, libpam-modules-bin, libpam-runtime, libpam0g
+      License: GPL-2.0-or-later AND BSD-3-Clause
+      plus further reciprocally licensed Debian userland components.
+  Detail   :
+      These arrive from the python:3.12-slim-bookworm base image. The
+      Dockerfile does not install them: its only `apt-get install` line adds
+      curl, zip and unzip. They are therefore INHERITED, not added, and
+      nothing in this service uses PAM authentication.
+
+      The ASF does not redistribute these in source form; they are present
+      only in the convenience binary. This is disclosed in both LICENSE and
+      NOTICE.
+  Action   :
+      No removal possible without changing base image. Disclosure is the
+      required and sufficient remedy. Do NOT add any further GPL component
+      deliberately.
+
+
+==============================================================================
+WARN 6 -- Category B components (reciprocal, binary-only)
+==============================================================================
+
+  Severity : conditions must hold
+  Components:
+      certifi (2025.11.12)  -- MPL-2.0
+      waitress (3.0.2)      -- ZPL-2.1
+  Detail   :
+      Category B permits inclusion in BINARY form only, unmodified and as a
+      separate file, with the reciprocal license disclosed. Both are installed
+      unmodified as separate wheels by uv and are not statically combined with
+      or patched by OpenServerless code. Full MPL-2.0 reference and ZPL-2.1
+      text are reproduced in LICENSE.
+
+      Note: certifi's own license file states it contains a MODIFIED version
+      of Mozilla's ca-bundle.crt. The modification is made by the certifi
+      project upstream, not by OpenServerless; OpenServerless ships certifi
+      unmodified. This satisfies Category B.
+  Action   :
+      None required. Do not patch either package in the image.
+
+
+==============================================================================
+WARN 7 -- copyright holders that could not be verified from the artifact
+==============================================================================
+
+  Severity : verify before release
+  Detail   :
+      Copyright lines in LICENSE and NOTICE were extracted from the license
+      files actually shipped in each installed distribution. For a few
+      components the shipped license file is the bare Apache-2.0 text with no
+      copyright line, so the attribution was taken from package metadata or
+      source headers instead:
+
+          bcrypt     -- taken from METADATA Author-email
+                        (The Python Cryptographic Authority developers)
+          minio      -- taken from "(C) 2015-2021 MinIO, Inc." in source headers
+          requests   -- taken from __version__.py (__copyright__)
+          uv         -- NOT installed locally; uv is installed by pip at image
+                        build time. Its attribution (Astral Software Inc.,
+                        Apache-2.0 OR MIT) was not verified against a built
+                        image.
+          curl       -- Debian package; its copyright range and license text
+                        were not read from the image.
+          zip/unzip  -- Debian packages; Info-ZIP license text was not read
+                        from the image.
+          CPython    -- PSF copyright chain not read from the base image.
+
+      Docker was unavailable in the environment where these files were
+      regenerated, so no component was verified against an actually built
+      image. The 43 Python packages WERE verified by resolving pyproject.toml
+      against uv.lock and reading each installed dist-info.
+  Action   :
+      Before the release vote, build the image and confirm the Debian, uv and
+      CPython attributions against /usr/share/doc/<pkg>/copyright and the
+      base image, and adjust the corresponding LICENSE/NOTICE sections.
+
+
+==============================================================================
+WARN 8 -- LICENSE/NOTICE are copied to / in the image, not to a doc path
+==============================================================================
+
+  Severity : minor
+  Detail   :
+      The Dockerfile has:
+
+          COPY DISCLAIMER LICENSE NOTICE  /
+
+      WARN is NOT copied into the image, although both LICENSE and NOTICE
+      refer the reader to "the WARN file beside this file". Inside the image
+      that reference cannot be followed.
+  Action   :
+      Either add WARN to that COPY line, or drop the in-image cross-reference.
+      Consider also placing the files under a conventional path such as
+      /usr/share/doc/openserverless-admin-api/ in addition to /.
+
+
+==============================================================================
+WARN 9 -- dual-licensed components: no election recorded
+==============================================================================
+
+  Severity : informational
+  Components:
+      cryptography (50.0.0)  -- Apache-2.0 OR BSD-3-Clause
+      packaging (25.0)       -- Apache-2.0 OR BSD-2-Clause
+      uv                     -- Apache-2.0 OR MIT
+  Detail   :
+      These are offered under a choice of licenses. LICENSE reproduces both
+      options for each rather than electing one, which is permissible but
+      leaves the election implicit.
+  Action   :
+      Optional: state that the ASF elects Apache-2.0 for each, which
+      simplifies the inventory.
+
+
+==============================================================================
+WARN 10 -- aiohttp is Apache-2.0 AND MIT
+==============================================================================
+
+  Severity : informational
+  Category : A
+  Detail   :
+      aiohttp (3.14.3) declares "Apache-2.0 AND MIT" -- a conjunction, not a
+      choice: it is Apache-2.0 licensed and vendors llhttp under MIT
+      (Copyright (c) 2018 Fedor Indutny). Both are disclosed.
+  Action   :
+      None required.
+
+
+==============================================================================
+WARN 11 -- previously recorded removals are confirmed still absent
+==============================================================================
+
+  Severity : informational
+  Detail   :
+      The previous WARN recorded that the LGPL `psycopg`/`psycopg-binary`
+      dependencies and the `telnet`/`inetutils-ping` packages had been
+      removed. Both removals are confirmed against the current tree:
+      pyproject.toml and uv.lock contain no psycopg, and the Dockerfile's
+      apt install list is curl, zip, unzip only.
+  Action   :
+      None required. Do not reintroduce them.
+
+
+==============================================================================
+SUMMARY
+==============================================================================
+
+  Category X added deliberately by this Dockerfile : none
+  Category X inherited from the base image         : GPL-2.0-or-later Debian
+                                                     userland (disclosed,
+                                                     WARN 5)
+  Category B components                            : certifi, waitress
+                                                     (conditions hold, WARN 6)
+  Blocking issues                                  : none
+  Open before release vote                         : WARN 7 (verify Debian /
+                                                     uv / CPython attributions
+                                                     against a built image)
+                                                     WARN 8 (WARN not shipped
+                                                     in image)
