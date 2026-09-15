@@ -200,228 +200,674 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+---------------
+
+The Apache source release of Apache OpenServerless consists of
+Apache-2.0 licensed files only, and the license above applies to all of
+it. The sections below apply to third-party software bundled in the
+container image built from the Dockerfile beside this file
+(docker.io/apache/openserverless-admin-api), which is a convenience
+binary assembled at build time. See the WARN file for the ASF
+category classification of each license.
+---------------
+
+The container image contains the following components which were
+released under an Apache 2.0 license, the text of which is reproduced
+above.
+
+  * aiohttp (3.14.3)            -- Apache-2.0 AND MIT
+  * aiosignal (1.4.0)
+  * bcrypt (5.0.0)
+  * frozenlist (1.8.0)
+  * minio (7.1.13)
+  * multidict (6.7.0)
+  * propcache (0.4.1)
+  * requests (2.32.5)
+  * uv (installed via pip)      -- Apache-2.0 OR MIT
+  * yarl (1.22.0)
+  * cryptography (50.0.0)       -- Apache-2.0 OR BSD-3-Clause
+  * packaging (25.0)            -- Apache-2.0 OR BSD-2-Clause
+---------------
+
+The container image contains the following components which were
+released under an MIT license.
+
+  * aiohttp (3.14.3), in part, and its vendored copy of llhttp
+  * attrs (25.4.0)
+  * auth0-python (4.13.0)
+  * backoff (2.2.1)
+  * blinker (1.9.0)
+  * charset-normalizer (3.4.4)
+  * flasgger (0.9.7.1)
+  * flask-cors (6.0.1)
+  * jsonschema (4.25.1)
+  * jsonschema-specifications (2025.9.1)
+  * pyjwt (2.13.0)
+  * pyyaml (6.0.3)
+  * redis (7.1.0)
+  * referencing (0.37.0)
+  * rpds-py (0.30.0)
+  * six (1.17.0)
+  * urllib3 (2.7.0)
+  * uv (installed via pip)      -- Apache-2.0 OR MIT
+
+The MIT-licensed components above carry the following copyright
+notices:
+
+  attrs                      Copyright (c) 2015 Hynek Schlawack and the attrs contributors
+  auth0-python               Copyright (c) 2017 Auth0, Inc. <support@auth0.com> (http://auth0.com)
+  backoff                    Copyright (c) 2014 litl, LLC.
+  blinker                    Copyright 2010 Jason Kirtland
+  charset-normalizer         Copyright (c) 2025 TAHRI Ahmed R.
+  flasgger                   Copyright (c) 2014 Bruno Rocha
+  jsonschema                 Copyright (c) 2013 Julian Berman
+  jsonschema-specifications  Copyright (c) 2022 Julian Berman
+  llhttp (vendored)          Copyright (c) 2018 Fedor Indutny
+  pyjwt                      Copyright (c) 2015-2022 José Padilla
+  pyyaml                     Copyright (c) 2006-2016 Kirill Simonov
+                             Copyright (c) 2017-2021 Ingy döt Net
+  redis                      Copyright (c) 2022-2023, Redis, inc.
+  referencing                Copyright (c) 2022 Julian Berman
+  rpds-py                    Copyright (c) 2023 Julian Berman
+  six                        Copyright (c) 2010-2024 Benjamin Peterson
+  urllib3                    Copyright (c) 2008-2020 Andrey Petrov and contributors
+
+The MIT license text, as distributed with attrs, is:
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Hynek Schlawack and the attrs contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+---------------
+
+The container image contains cffi (2.0.0), which was released under
+the MIT No Attribution license.
 
 
-==============================================================================
-BEGIN BUNDLED THIRD-PARTY SOFTWARE INVENTORY (container image)
-==============================================================================
+Except when otherwise stated (look for LICENSE files in directories or
+information at the beginning of each file) all software and
+documentation is licensed as follows: 
 
-==============================================================================
-LICENSES OF BUNDLED THIRD-PARTY SOFTWARE
-Container image: apache/openserverless-admin-api
-==============================================================================
+    MIT No Attribution
 
-Apache OpenServerless itself is licensed under the Apache License,
-Version 2.0, reproduced above. The container image built from the
-Dockerfile beside this file additionally bundles the third-party
-components listed below, each under its own license.
+    Permission is hereby granted, free of charge, to any person 
+    obtaining a copy of this software and associated documentation 
+    files (the "Software"), to deal in the Software without 
+    restriction, including without limitation the rights to use, 
+    copy, modify, merge, publish, distribute, sublicense, and/or 
+    sell copies of the Software, and to permit persons to whom the 
+    Software is furnished to do so.
 
-Refer to https://www.apache.org/legal/resolved.html for the ASF
-classification of these licenses. Components that are NOT compatible
-with the Apache License 2.0 are enumerated in the WARN file.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+    DEALINGS IN THE SOFTWARE.
+---------------
 
-------------------------------------------------------------------------------
-Summary by license
-------------------------------------------------------------------------------
+The container image contains the following components which were
+released under a 3-clause BSD license.
 
-Apache-2.0
-    aiosignal (1.4.0)
-    asttokens (3.0.1)
-    bcrypt (5.0.0)
-    frozenlist (1.8.0)
-    minio (7.1.13)
-    multidict (6.7.0)
-    propcache (0.4.1)
-    requests (2.32.5)
-    yarl (1.22.0)
+  * click (8.3.1)
+  * flask (3.1.2)
+  * flatdict (4.1.0)
+  * idna (3.15)
+  * itsdangerous (2.2.0)
+  * jinja2 (3.1.6)
+  * markupsafe (3.0.3)
+  * mistune (3.3.0)
+  * pycparser (2.23)
+  * python-dotenv (1.2.2)
+  * werkzeug (3.1.4)
+  * cryptography (50.0.0)       -- Apache-2.0 OR BSD-3-Clause
 
-Apache-2.0 AND MIT
-    aiohttp (3.14.3)
+The 3-clause-BSD-licensed components above carry the following
+copyright notices:
 
-Apache-2.0 OR BSD-2-Clause
-    packaging (25.0)
+  click           Copyright 2014 Pallets
+  cryptography    Copyright (c) Individual contributors.
+  flask           Copyright 2010 Pallets
+  flatdict        Copyright (c) 2013-2020 Gavin M. Roy
+  idna            Copyright (c) 2013-2026, Kim Davies and contributors.
+  itsdangerous    Copyright 2011 Pallets
+  jinja2          Copyright 2007 Pallets
+  markupsafe      Copyright 2010 Pallets
+  mistune         Copyright (c) 2014, Hsiaoming Yang
+  pycparser       Copyright (c) 2008-2022, Eli Bendersky
+  python-dotenv   Copyright (c) 2014, Saurabh Kumar (python-dotenv),
+                  2013, Ted Tieken (django-dotenv-rw),
+                  2013, Jacob Kaplan-Moss (django-dotenv)
+  werkzeug        Copyright 2007 Pallets
 
-Apache-2.0 OR BSD-3-Clause
-    cryptography (50.0.0)
+The 3-clause BSD license text, as distributed with click, is:
 
-Apache-2.0 OR MIT
-    uv (latest)
+Copyright 2014 Pallets
 
-BSD-2-Clause
-    decorator (5.2.1)
-    pygments (2.19.2)
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
 
-BSD-3-Clause
-    click (8.3.1)
-    colorama (0.4.6)
-    flask (3.1.2)
-    flatdict (4.1.0)
-    idna (3.15)
-    ipython (9.8.0)
-    ipython-pygments-lexers (1.1.1)
-    itsdangerous (2.2.0)
-    jinja2 (3.1.6)
-    markupsafe (3.0.3)
-    matplotlib-inline (0.2.1)
-    mistune (3.3.0)
-    prompt-toolkit (3.0.52)
-    pycparser (2.23)
-    python-dotenv (1.2.2)
-    traitlets (5.14.3)
-    werkzeug (3.1.4)
+1.  Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
 
-GPL-2.0-or-later AND BSD-3-Clause
-    libpam-modules, libpam-modules-bin, libpam-runtime, libpam0g ((Debian bookworm))
+2.  Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
 
-ISC
-    pexpect (4.9.0)
-    ptyprocess (0.7.0)
+3.  Neither the name of the copyright holder nor the names of its
+    contributors may be used to endorse or promote products derived from
+    this software without specific prior written permission.
 
-Info-ZIP
-    zip, unzip ((Debian bookworm))
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+---------------
 
-MIT
-    attrs (25.4.0)
-    auth0-python (4.13.0)
-    backoff (2.2.1)
-    blinker (1.9.0)
-    cffi (2.0.0)
-    charset-normalizer (3.4.4)
-    executing (2.2.1)
-    flasgger (0.9.7.1)
-    flask-cors (6.0.1)
-    jedi (0.19.2)
-    jsonschema (4.25.1)
-    jsonschema-specifications (2025.9.1)
-    parso (0.8.5)
-    pure-eval (0.2.3)
-    pyjwt (2.13.0)
-    pyyaml (6.0.3)
-    redis (7.1.0)
-    referencing (0.37.0)
-    rpds-py (0.30.0)
-    six (1.17.0)
-    stack-data (0.6.3)
-    urllib3 (2.7.0)
-    wcwidth (0.2.14)
+The container image contains packaging (25.0), which was released
+under an Apache 2.0 license (reproduced above) and a 2-clause BSD
+license, at the recipient's option.
 
-MPL-2.0
-    certifi (2025.11.12)
+Copyright (c) Donald Stufft and individual contributors.
+All rights reserved.
 
-PSF-2.0
-    aiohappyeyeballs (2.6.1)
-    typing-extensions (4.15.0)
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-ZPL-2.1
-    waitress (3.0.2)
+    1. Redistributions of source code must retain the above copyright notice,
+       this list of conditions and the following disclaimer.
 
-curl (MIT-like)
-    curl ((Debian bookworm))
+    2. Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
 
-mixed; see WARN
-    (see the FROM line of the Dockerfile) (-)
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+---------------
 
-------------------------------------------------------------------------------
-Detail by component
-------------------------------------------------------------------------------
+The container image contains the CPython runtime and standard
+library, obtained from the python:3.12-slim-bookworm base image, and the
+components aiohappyeyeballs (2.6.1) and typing-extensions (4.15.0),
+which were released under the Python Software Foundation License
+Version 2.
 
-Python runtime dependencies (pyproject.toml / uv.lock)
-------------------------------------------------------
-  aiohappyeyeballs (2.6.1) -- PSF-2.0
-  aiohttp (3.14.3) -- Apache-2.0 AND MIT
-  aiosignal (1.4.0) -- Apache-2.0
-  asttokens (3.0.1) -- Apache-2.0
-  attrs (25.4.0) -- MIT
-  auth0-python (4.13.0) -- MIT
-  backoff (2.2.1) -- MIT
-  bcrypt (5.0.0) -- Apache-2.0
-  blinker (1.9.0) -- MIT
-  certifi (2025.11.12) -- MPL-2.0
-      Category B: used unmodified, as a separate file.
-  cffi (2.0.0) -- MIT
-  charset-normalizer (3.4.4) -- MIT
-  click (8.3.1) -- BSD-3-Clause
-  colorama (0.4.6) -- BSD-3-Clause
-  cryptography (50.0.0) -- Apache-2.0 OR BSD-3-Clause
-  decorator (5.2.1) -- BSD-2-Clause
-  executing (2.2.1) -- MIT
-  flasgger (0.9.7.1) -- MIT
-  flask (3.1.2) -- BSD-3-Clause
-  flask-cors (6.0.1) -- MIT
-  flatdict (4.1.0) -- BSD-3-Clause
-  frozenlist (1.8.0) -- Apache-2.0
-  idna (3.15) -- BSD-3-Clause
-  ipython (9.8.0) -- BSD-3-Clause
-      Dev-only dependency.
-  ipython-pygments-lexers (1.1.1) -- BSD-3-Clause
-      Dev-only dependency.
-  itsdangerous (2.2.0) -- BSD-3-Clause
-  jedi (0.19.2) -- MIT
-  jinja2 (3.1.6) -- BSD-3-Clause
-  jsonschema (4.25.1) -- MIT
-  jsonschema-specifications (2025.9.1) -- MIT
-  markupsafe (3.0.3) -- BSD-3-Clause
-  matplotlib-inline (0.2.1) -- BSD-3-Clause
-  minio (7.1.13) -- Apache-2.0
-  mistune (3.3.0) -- BSD-3-Clause
-  multidict (6.7.0) -- Apache-2.0
-  packaging (25.0) -- Apache-2.0 OR BSD-2-Clause
-  parso (0.8.5) -- MIT
-  pexpect (4.9.0) -- ISC
-  prompt-toolkit (3.0.52) -- BSD-3-Clause
-  propcache (0.4.1) -- Apache-2.0
-  ptyprocess (0.7.0) -- ISC
-  pure-eval (0.2.3) -- MIT
-  pycparser (2.23) -- BSD-3-Clause
-  pygments (2.19.2) -- BSD-2-Clause
-  pyjwt (2.13.0) -- MIT
-  python-dotenv (1.2.2) -- BSD-3-Clause
-  pyyaml (6.0.3) -- MIT
-  redis (7.1.0) -- MIT
-  referencing (0.37.0) -- MIT
-  requests (2.32.5) -- Apache-2.0
-  rpds-py (0.30.0) -- MIT
-  six (1.17.0) -- MIT
-  stack-data (0.6.3) -- MIT
-  traitlets (5.14.3) -- BSD-3-Clause
-  typing-extensions (4.15.0) -- PSF-2.0
-  urllib3 (2.7.0) -- MIT
-  waitress (3.0.2) -- ZPL-2.1
-      Category B: used unmodified, as a separate file.
-  wcwidth (0.2.14) -- MIT
-  werkzeug (3.1.4) -- BSD-3-Clause
-  yarl (1.22.0) -- Apache-2.0
+A. HISTORY OF THE SOFTWARE
+==========================
 
-Operating-system packages installed by the Dockerfile
------------------------------------------------------
-  uv (latest) -- Apache-2.0 OR MIT
-      Python dependency manager, installed via pip.
-  curl ((Debian bookworm)) -- curl (MIT-like)
-  zip, unzip ((Debian bookworm)) -- Info-ZIP
+Python was created in the early 1990s by Guido van Rossum at Stichting
+Mathematisch Centrum (CWI, see https://www.cwi.nl) in the Netherlands
+as a successor of a language called ABC.  Guido remains Python's
+principal author, although it includes many contributions from others.
 
-Base operating system image
----------------------------
-  (see the FROM line of the Dockerfile) (-) -- mixed; see WARN
-      Operating-system components are supplied by the upstream base image and are not
-      redistributed by the ASF in source form.
-  libpam-modules, libpam-modules-bin, libpam-runtime, libpam0g ((Debian bookworm)) -- GPL-2.0-or-later AND BSD-3-Clause
-      Shipped by the upstream base image; not installed by this Dockerfile. *** SEE WARN ***
+In 1995, Guido continued his work on Python at the Corporation for
+National Research Initiatives (CNRI, see https://www.cnri.reston.va.us)
+in Reston, Virginia where he released several versions of the
+software.
 
-------------------------------------------------------------------------------
-Full license texts
-------------------------------------------------------------------------------
+In May 2000, Guido and the Python core development team moved to
+BeOpen.com to form the BeOpen PythonLabs team.  In October of the same
+year, the PythonLabs team moved to Digital Creations, which became
+Zope Corporation.  In 2001, the Python Software Foundation (PSF, see
+https://www.python.org/psf/) was formed, a non-profit organization
+created specifically to own Python-related Intellectual Property.
+Zope Corporation was a sponsoring member of the PSF.
 
-The complete text of the Apache License 2.0 is reproduced at the top of
-this file. The complete texts of the other licenses referenced above are
-distributed with each component inside the container image, in the
-package metadata directories of the respective package manager:
+All Python releases are Open Source (see https://opensource.org for
+the Open Source Definition).  Historically, most, but not all, Python
+releases have also been GPL-compatible; the table below summarizes
+the various releases.
 
-  * Python packages: <site-packages>/<dist>.dist-info/ (LICENSE, METADATA)
-  * Node.js packages: /node_modules/<pkg>/LICENSE
-  * PHP packages:     /phpAction/composer/vendor/<pkg>/LICENSE
-  * Go modules:       vendored module sources / pkg.go.dev
-  * Debian packages:  /usr/share/doc/<pkg>/copyright
+    Release         Derived     Year        Owner       GPL-
+                    from                                compatible? (1)
 
-==============================================================================
-END BUNDLED THIRD-PARTY SOFTWARE INVENTORY
-==============================================================================
+    0.9.0 thru 1.2              1991-1995   CWI         yes
+    1.3 thru 1.5.2  1.2         1995-1999   CNRI        yes
+    1.6             1.5.2       2000        CNRI        no
+    2.0             1.6         2000        BeOpen.com  no
+    1.6.1           1.6         2001        CNRI        yes (2)
+    2.1             2.0+1.6.1   2001        PSF         no
+    2.0.1           2.0+1.6.1   2001        PSF         yes
+    2.1.1           2.1+2.0.1   2001        PSF         yes
+    2.1.2           2.1.1       2002        PSF         yes
+    2.1.3           2.1.2       2002        PSF         yes
+    2.2 and above   2.1.1       2001-now    PSF         yes
+
+Footnotes:
+
+(1) GPL-compatible doesn't mean that we're distributing Python under
+    the GPL.  All Python licenses, unlike the GPL, let you distribute
+    a modified version without making your changes open source.  The
+    GPL-compatible licenses make it possible to combine Python with
+    other software that is released under the GPL; the others don't.
+
+(2) According to Richard Stallman, 1.6.1 is not GPL-compatible,
+    because its license has a choice of law clause.  According to
+    CNRI, however, Stallman's lawyer has told CNRI's lawyer that 1.6.1
+    is "not incompatible" with the GPL.
+
+Thanks to the many outside volunteers who have worked under Guido's
+direction to make these releases possible.
+
+
+B. TERMS AND CONDITIONS FOR ACCESSING OR OTHERWISE USING PYTHON
+===============================================================
+
+Python software and documentation are licensed under the
+Python Software Foundation License Version 2.
+
+Starting with Python 3.8.6, examples, recipes, and other code in
+the documentation are dual licensed under the PSF License Version 2
+and the Zero-Clause BSD license.
+
+Some software incorporated into Python is under different licenses.
+The licenses are listed with code falling under that license.
+
+
+PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2
+--------------------------------------------
+
+1. This LICENSE AGREEMENT is between the Python Software Foundation
+("PSF"), and the Individual or Organization ("Licensee") accessing and
+otherwise using this software ("Python") in source or binary form and
+its associated documentation.
+
+2. Subject to the terms and conditions of this License Agreement, PSF hereby
+grants Licensee a nonexclusive, royalty-free, world-wide license to reproduce,
+analyze, test, perform and/or display publicly, prepare derivative works,
+distribute, and otherwise use Python alone or in any derivative version,
+provided, however, that PSF's License Agreement and PSF's notice of copyright,
+i.e., "Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023 Python Software Foundation;
+All Rights Reserved" are retained in Python alone or in any derivative version
+prepared by Licensee.
+
+3. In the event Licensee prepares a derivative work that is based on
+or incorporates Python or any part thereof, and wants to make
+the derivative work available to others as provided herein, then
+Licensee hereby agrees to include in any such work a brief summary of
+the changes made to Python.
+
+4. PSF is making Python available to Licensee on an "AS IS"
+basis.  PSF MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR
+IMPLIED.  BY WAY OF EXAMPLE, BUT NOT LIMITATION, PSF MAKES NO AND
+DISCLAIMS ANY REPRESENTATION OR WARRANTY OF MERCHANTABILITY OR FITNESS
+FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF PYTHON WILL NOT
+INFRINGE ANY THIRD PARTY RIGHTS.
+
+5. PSF SHALL NOT BE LIABLE TO LICENSEE OR ANY OTHER USERS OF PYTHON
+FOR ANY INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS AS
+A RESULT OF MODIFYING, DISTRIBUTING, OR OTHERWISE USING PYTHON,
+OR ANY DERIVATIVE THEREOF, EVEN IF ADVISED OF THE POSSIBILITY THEREOF.
+
+6. This License Agreement will automatically terminate upon a material
+breach of its terms and conditions.
+
+7. Nothing in this License Agreement shall be deemed to create any
+relationship of agency, partnership, or joint venture between PSF and
+Licensee.  This License Agreement does not grant permission to use PSF
+trademarks or trade name in a trademark sense to endorse or promote
+products or services of Licensee, or any third party.
+
+8. By copying, installing or otherwise using Python, Licensee
+agrees to be bound by the terms and conditions of this License
+Agreement.
+
+
+BEOPEN.COM LICENSE AGREEMENT FOR PYTHON 2.0
+-------------------------------------------
+
+BEOPEN PYTHON OPEN SOURCE LICENSE AGREEMENT VERSION 1
+
+1. This LICENSE AGREEMENT is between BeOpen.com ("BeOpen"), having an
+office at 160 Saratoga Avenue, Santa Clara, CA 95051, and the
+Individual or Organization ("Licensee") accessing and otherwise using
+this software in source or binary form and its associated
+documentation ("the Software").
+
+2. Subject to the terms and conditions of this BeOpen Python License
+Agreement, BeOpen hereby grants Licensee a non-exclusive,
+royalty-free, world-wide license to reproduce, analyze, test, perform
+and/or display publicly, prepare derivative works, distribute, and
+otherwise use the Software alone or in any derivative version,
+provided, however, that the BeOpen Python License is retained in the
+Software, alone or in any derivative version prepared by Licensee.
+
+3. BeOpen is making the Software available to Licensee on an "AS IS"
+basis.  BEOPEN MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR
+IMPLIED.  BY WAY OF EXAMPLE, BUT NOT LIMITATION, BEOPEN MAKES NO AND
+DISCLAIMS ANY REPRESENTATION OR WARRANTY OF MERCHANTABILITY OR FITNESS
+FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF THE SOFTWARE WILL NOT
+INFRINGE ANY THIRD PARTY RIGHTS.
+
+4. BEOPEN SHALL NOT BE LIABLE TO LICENSEE OR ANY OTHER USERS OF THE
+SOFTWARE FOR ANY INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS
+AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THE SOFTWARE, OR ANY
+DERIVATIVE THEREOF, EVEN IF ADVISED OF THE POSSIBILITY THEREOF.
+
+5. This License Agreement will automatically terminate upon a material
+breach of its terms and conditions.
+
+6. This License Agreement shall be governed by and interpreted in all
+respects by the law of the State of California, excluding conflict of
+law provisions.  Nothing in this License Agreement shall be deemed to
+create any relationship of agency, partnership, or joint venture
+between BeOpen and Licensee.  This License Agreement does not grant
+permission to use BeOpen trademarks or trade names in a trademark
+sense to endorse or promote products or services of Licensee, or any
+third party.  As an exception, the "BeOpen Python" logos available at
+http://www.pythonlabs.com/logos.html may be used according to the
+permissions granted on that web page.
+
+7. By copying, installing or otherwise using the software, Licensee
+agrees to be bound by the terms and conditions of this License
+Agreement.
+
+
+CNRI LICENSE AGREEMENT FOR PYTHON 1.6.1
+---------------------------------------
+
+1. This LICENSE AGREEMENT is between the Corporation for National
+Research Initiatives, having an office at 1895 Preston White Drive,
+Reston, VA 20191 ("CNRI"), and the Individual or Organization
+("Licensee") accessing and otherwise using Python 1.6.1 software in
+source or binary form and its associated documentation.
+
+2. Subject to the terms and conditions of this License Agreement, CNRI
+hereby grants Licensee a nonexclusive, royalty-free, world-wide
+license to reproduce, analyze, test, perform and/or display publicly,
+prepare derivative works, distribute, and otherwise use Python 1.6.1
+alone or in any derivative version, provided, however, that CNRI's
+License Agreement and CNRI's notice of copyright, i.e., "Copyright (c)
+1995-2001 Corporation for National Research Initiatives; All Rights
+Reserved" are retained in Python 1.6.1 alone or in any derivative
+version prepared by Licensee.  Alternately, in lieu of CNRI's License
+Agreement, Licensee may substitute the following text (omitting the
+quotes): "Python 1.6.1 is made available subject to the terms and
+conditions in CNRI's License Agreement.  This Agreement together with
+Python 1.6.1 may be located on the internet using the following
+unique, persistent identifier (known as a handle): 1895.22/1013.  This
+Agreement may also be obtained from a proxy server on the internet
+using the following URL: http://hdl.handle.net/1895.22/1013".
+
+3. In the event Licensee prepares a derivative work that is based on
+or incorporates Python 1.6.1 or any part thereof, and wants to make
+the derivative work available to others as provided herein, then
+Licensee hereby agrees to include in any such work a brief summary of
+the changes made to Python 1.6.1.
+
+4. CNRI is making Python 1.6.1 available to Licensee on an "AS IS"
+basis.  CNRI MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR
+IMPLIED.  BY WAY OF EXAMPLE, BUT NOT LIMITATION, CNRI MAKES NO AND
+DISCLAIMS ANY REPRESENTATION OR WARRANTY OF MERCHANTABILITY OR FITNESS
+FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF PYTHON 1.6.1 WILL NOT
+INFRINGE ANY THIRD PARTY RIGHTS.
+
+5. CNRI SHALL NOT BE LIABLE TO LICENSEE OR ANY OTHER USERS OF PYTHON
+1.6.1 FOR ANY INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS AS
+A RESULT OF MODIFYING, DISTRIBUTING, OR OTHERWISE USING PYTHON 1.6.1,
+OR ANY DERIVATIVE THEREOF, EVEN IF ADVISED OF THE POSSIBILITY THEREOF.
+
+6. This License Agreement will automatically terminate upon a material
+breach of its terms and conditions.
+
+7. This License Agreement shall be governed by the federal
+intellectual property law of the United States, including without
+limitation the federal copyright law, and, to the extent such
+U.S. federal law does not apply, by the law of the Commonwealth of
+Virginia, excluding Virginia's conflict of law provisions.
+Notwithstanding the foregoing, with regard to derivative works based
+on Python 1.6.1 that incorporate non-separable material that was
+previously distributed under the GNU General Public License (GPL), the
+law of the Commonwealth of Virginia shall govern this License
+Agreement only as to issues arising under or with respect to
+Paragraphs 4, 5, and 7 of this License Agreement.  Nothing in this
+License Agreement shall be deemed to create any relationship of
+agency, partnership, or joint venture between CNRI and Licensee.  This
+License Agreement does not grant permission to use CNRI trademarks or
+trade name in a trademark sense to endorse or promote products or
+services of Licensee, or any third party.
+
+8. By clicking on the "ACCEPT" button where indicated, or by copying,
+installing or otherwise using Python 1.6.1, Licensee agrees to be
+bound by the terms and conditions of this License Agreement.
+
+        ACCEPT
+
+
+CWI LICENSE AGREEMENT FOR PYTHON 0.9.0 THROUGH 1.2
+--------------------------------------------------
+
+Copyright (c) 1991 - 1995, Stichting Mathematisch Centrum Amsterdam,
+The Netherlands.  All rights reserved.
+
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice appear in all copies and that
+both that copyright notice and this permission notice appear in
+supporting documentation, and that the name of Stichting Mathematisch
+Centrum or CWI not be used in advertising or publicity pertaining to
+distribution of the software without specific, written prior
+permission.
+
+STICHTING MATHEMATISCH CENTRUM DISCLAIMS ALL WARRANTIES WITH REGARD TO
+THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS, IN NO EVENT SHALL STICHTING MATHEMATISCH CENTRUM BE LIABLE
+FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
+OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+ZERO-CLAUSE BSD LICENSE FOR CODE IN THE PYTHON DOCUMENTATION
+----------------------------------------------------------------------
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+---------------
+
+The container image contains certifi (2025.11.12), which
+distributes a modified version of the Mozilla CA root certificate
+bundle under the Mozilla Public License, v. 2.0. The full text of the
+Mozilla Public License 2.0 is available at http://mozilla.org/MPL/2.0/.
+
+This package contains a modified version of ca-bundle.crt:
+
+ca-bundle.crt -- Bundle of CA Root Certificates
+
+This is a bundle of X.509 certificates of public Certificate Authorities
+(CA). These were automatically extracted from Mozilla's root certificates
+file (certdata.txt).  This file can be found in the mozilla source tree:
+https://hg.mozilla.org/mozilla-central/file/tip/security/nss/lib/ckfw/builtins/certdata.txt
+It contains the certificates in PEM format and therefore
+can be directly used with curl / libcurl / php_curl, or with
+an Apache+mod_ssl webserver for SSL client authentication.
+Just configure this file as the SSLCACertificateFile.#
+
+***** BEGIN LICENSE BLOCK *****
+This Source Code Form is subject to the terms of the Mozilla Public License,
+v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
+one at http://mozilla.org/MPL/2.0/.
+
+***** END LICENSE BLOCK *****
+@(#) $RCSfile: certdata.txt,v $ $Revision: 1.80 $ $Date: 2011/11/03 15:11:58 $
+---------------
+
+The container image contains waitress (3.0.2), which was released
+under the Zope Public License 2.1.
+
+Zope Public License (ZPL) Version 2.1
+
+A copyright notice accompanies this license document that identifies the
+copyright holders.
+
+This license has been certified as open source. It has also been designated as
+GPL compatible by the Free Software Foundation (FSF).
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions in source code must retain the accompanying copyright
+notice, this list of conditions, and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the accompanying copyright
+notice, this list of conditions, and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+
+3. Names of the copyright holders must not be used to endorse or promote
+products derived from this software without prior written permission from the
+copyright holders.
+
+4. The right to distribute this software or to use it for any purpose does not
+give you the right to use Servicemarks (sm) or Trademarks (tm) of the
+copyright
+holders. Use of them is covered by separate agreement with the copyright
+holders.
+
+5. If any files are modified, you must cause the modified files to carry
+prominent notices stating that you changed the files and the date of any
+change.
+
+Disclaimer
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY EXPRESSED
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+---------------
+
+The container image contains curl, obtained from the Debian
+bookworm userland of the base image, which was released under an
+MIT-like license (the curl license).
+
+COPYRIGHT AND PERMISSION NOTICE
+
+Copyright (c) 1996 - 2026, Daniel Stenberg, <daniel@haxx.se>, and many
+contributors, see the THANKS file.
+
+All rights reserved.
+
+Permission to use, copy, modify, and distribute this software for any purpose
+with or without fee is hereby granted, provided that the above copyright
+notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF THIRD PARTY RIGHTS. IN
+NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of a copyright holder shall not
+be used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization of the copyright holder.
+---------------
+
+The container image contains zip and unzip, obtained from the
+Debian bookworm userland of the base image, which were released under
+the Info-ZIP license.
+
+This software is provided "as is," without warranty of any kind, express
+or implied.  In no event shall Info-ZIP or its contributors be held liable
+for any direct, indirect, incidental, special or consequential damages
+arising out of the use of or inability to use this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the above disclaimer and the following restrictions:
+
+    1. Redistributions of source code (in whole or in part) must retain
+       the above copyright notice, definition, disclaimer, and this list
+       of conditions.
+
+    2. Redistributions in binary form (compiled executables and libraries)
+       must reproduce the above copyright notice, definition, disclaimer,
+       and this list of conditions in documentation and/or other materials
+       provided with the distribution.
+
+    3. Altered versions--including, but not limited to, ports to new operating
+       systems, existing ports with new graphical interfaces, versions with
+       modified or added functionality, and dynamic, shared, or static library
+       versions not from Info-ZIP--must be plainly marked as such and must not
+       be misrepresented as being the original source or, if binaries,
+       compiled from the original source.  Such altered versions also must not
+       be misrepresented as being Info-ZIP releases--including, but not
+       limited to, labeling of the altered versions with the names "Info-ZIP"
+       (or any variation thereof, including, but not limited to, different
+       capitalizations), "Pocket UnZip," "WiZ" or "MacZip" without the
+       explicit permission of Info-ZIP.  Such altered versions are further
+       prohibited from misrepresentative use of the Zip-Bugs or Info-ZIP
+       e-mail addresses or the Info-ZIP URL(s), such as to imply Info-ZIP
+       will provide support for the altered versions.
+
+    4. Info-ZIP retains the right to use the names "Info-ZIP," "Zip," "UnZip,"
+       "UnZipSFX," "WiZ," "Pocket UnZip," "Pocket Zip," and "MacZip" for its
+       own source and binary releases.
+---------------
+
+The container image inherits from the python:3.12-slim-bookworm
+base image a Debian userland containing components under reciprocal
+licenses, including GPL-2.0-or-later (libpam-modules,
+libpam-modules-bin, libpam-runtime, libpam0g). These components are
+supplied by the upstream base image and are not redistributed by the
+ASF in source form. Their license texts are distributed inside the
+container image at /usr/share/doc/<package>/copyright. See the WARN
+file beside this LICENSE.
+---------------
+
+The complete license text of every bundled Python component is
+distributed inside the container image, in the package metadata
+directory of each distribution:
+
+  <site-packages>/<distribution>-<version>.dist-info/
+
+as LICENSE, LICENSE.txt, COPYING or licenses/, together with METADATA.
+The license texts of Debian components are distributed at
+/usr/share/doc/<package>/copyright.

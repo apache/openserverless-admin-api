@@ -43,7 +43,7 @@ RUN pip install --no-cache-dir uv
 USER openserverless
 RUN uv venv && uv pip install --requirement pyproject.toml
 
-# Apache release metadata (see DISCLAIMER, LICENSE, NOTICE, WARN)
+# Apache release metadata (see DISCLAIMER, LICENSE, NOTICE)
 COPY DISCLAIMER LICENSE NOTICE  /
 
 ENV HOME=/home/openserverless
