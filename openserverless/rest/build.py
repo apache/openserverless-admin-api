@@ -145,12 +145,12 @@ def build():
     # validate the target
     wsk_user_name = auth_result.get('login','').lower()
     target = json_data.get('target')
-    target_user = str(target).split(':')[0]
-
     # Strict user check is enabled by default for security
     strict_user_check = os.environ.get("STRICT_USER_CHECK", "true").lower() not in ("false", "0", "no", "off")
-    if strict_user_check and (wsk_user_name != target_user):
+    if not BuildService.valid_image_target(target, wsk_user_name if strict_user_check else None):
         return res_builder.build_error_message("Invalid target for the build.", status_code=HTTPStatus.BAD_REQUEST)
+    if not BuildService.valid_source_image(json_data.get('source')):
+        return res_builder.build_error_message("Invalid source image for the build.", status_code=HTTPStatus.BAD_REQUEST)
 
     env['wsk_user_name'] = wsk_user_name
     build_service = BuildService(user_env=env)
