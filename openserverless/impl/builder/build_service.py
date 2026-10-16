@@ -25,6 +25,7 @@ from types import SimpleNamespace
 import random
 import string
 import binascii
+import re
 
 JOB_NAME = "build"
 CM_NAME = "cm"
@@ -35,6 +36,19 @@ class BuildService:
     It handles the creation of Dockerfiles, ConfigMaps, and Kubernetes Jobs to build Docker images
     based on the provided build configuration.
     """
+
+    @staticmethod
+    def valid_image_target(target, expected_user=None):
+        """Accept one OPS image name and a Docker-compatible tag."""
+        if not isinstance(target, str):
+            return False
+        match = re.fullmatch(r"([a-z0-9](?:[a-z0-9._-]*[a-z0-9])?):([A-Za-z0-9_][A-Za-z0-9_.-]{0,127})", target)
+        return bool(match and (expected_user is None or match.group(1) == expected_user))
+
+    @staticmethod
+    def valid_source_image(source):
+        """Keep FROM limited to a single image reference, never Dockerfile text."""
+        return isinstance(source, str) and bool(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/@-]*", source))
 
     def __init__(self, user_env=None):
         # A super userful Kube Api Client
@@ -205,6 +219,11 @@ class BuildService:
         """
         import tempfile
         import base64
+
+        if not self.valid_image_target(image_name):
+            return (False, "Invalid target for the build")
+        if not self.valid_source_image(self.build_config.get("source")):
+            return (False, "Invalid source image for the build")
 
         # define registry host
         self.registry_host = self.get_registry_host()
@@ -402,11 +421,16 @@ class BuildService:
 
     def create_build_job(self, image_name: str) -> dict:
         """Create a Kubernetes job manifest for building the Docker image."""
+        if not self.valid_image_target(image_name):
+            raise ValueError("Invalid target for the build")
         if not self.custom_registry_auth:
             registry_image_name = f"{self.registry_host}/{image_name}"
         else:
             registry_image_name = f"{image_name}"
 
+        # Require a private Kubernetes user namespace; keep BuildKit's process
+        # sandbox enabled. Subordinate IDs exclude Pod root and the worker UID.
+        # The resulting nested map supports build IDs 0..65534.
         # --- MANIFEST DEL JOB ---
         job_manifest = {
             "apiVersion": "batch/v1",
@@ -417,6 +441,8 @@ class BuildService:
                 "template": {
                     "spec": {
                         "restartPolicy": "Never",
+                        "automountServiceAccountToken": False,
+                        "hostUsers": False,
                         "volumes": [
                             {
                                 "name": "openserverless-buildkitd-conf",
@@ -449,7 +475,7 @@ class BuildService:
                                 "name": "copy-build-context",
                                 "image": "busybox:1.36",
                                 "command": [
-                                    "sh", "-c", "cp -rvL /configmap/* /workspace/ && cat /workspace/Dockerfile",
+                                    "sh", "-c", "cp -rL /configmap/* /workspace/ && printf 'user:1:999\\nuser:1001:64535\\n' > /workspace/subuid && cp /workspace/subuid /workspace/subgid",
                                 ],
                                 "volumeMounts": [
                                     { "name": "build-context-vol", "mountPath": "/configmap", },
@@ -460,25 +486,30 @@ class BuildService:
                         "containers": [
                             {
                                 "name": "buildkit",
-                                "image": "moby/buildkit:master-rootless",
+                                "image": "moby/buildkit@sha256:e6102bb86f8a2c79c8ae8aa0de3d5edef500dd33b619414413e06138e13fb1a1",
                                 "command": ["sh", "-c"],
                                 "args": [
                                     "rootlesskit buildkitd --config /config/buildkitd.toml  & sleep 3 && "
-                                    f"buildctl build --progress=plain --frontend=dockerfile.v0 --local context=/workspace --local dockerfile=/workspace --output=type=image,name={registry_image_name},push=true"
+                                    'buildctl build --progress=plain --frontend=dockerfile.v0 --local context=/workspace --local dockerfile=/workspace --output="type=image,name=${REGISTRY_IMAGE_NAME},push=true"'
                                 ],                                
                                 "securityContext": {
                                     "runAsUser": 1000,
                                     "runAsGroup": 1000,
                                     "allowPrivilegeEscalation": True,
-                                    "privileged": True,
-                                    "seccompProfile": { "type": "Unconfined" }
+                                    "privileged": False,
+                                    "procMount": "Unmasked",
+                                    "seccompProfile": { "type": "Unconfined" },
+                                    "appArmorProfile": { "type": "Unconfined" },
                                 },
                                 "env": [
-                                    { "name": "BUILDKIT_ROOTLESS", "value": "1" }
+                                    { "name": "BUILDKIT_ROOTLESS", "value": "1" },
+                                    { "name": "REGISTRY_IMAGE_NAME", "value": registry_image_name }
                                 ],
                                 "volumeMounts": [
                                     { "name": "openserverless-buildkitd-conf", "mountPath": "/config" },
                                     { "name": "workspace", "mountPath": "/workspace" },
+                                    { "name": "workspace", "mountPath": "/etc/subuid", "subPath": "subuid", "readOnly": True },
+                                    { "name": "workspace", "mountPath": "/etc/subgid", "subPath": "subgid", "readOnly": True },
                                     { "name": "docker-config", "mountPath": "/home/user/.docker" },
                                     { "name": "img-cache", "mountPath": "/tmp" },
                                     { "name": "cdi-etc", "mountPath": "/etc/cdi" },
