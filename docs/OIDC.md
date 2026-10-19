@@ -65,6 +65,28 @@ precedence:
 If a namespace cannot be provisioned automatically, an existing `WhiskUser` can be bound to an
 SSO identity manually by an admin, or auto-provisioning can be enabled (see below).
 
+Namespace mapping does not grant ownership. Before returning credentials, admin-api requires
+the `WhiskUser` annotations `openserverless.apache.org/sso-issuer` and
+`openserverless.apache.org/sso-sub` to match the validated token's nonempty `iss` and `sub`
+exactly. An unbound legacy namespace, a different subject, or a disabled binding receives
+`403`, even when the external username matches the namespace. Password login is unaffected.
+
+To bind an existing namespace, a cluster administrator must verify its owner and obtain the
+stable subject identifier from the trusted identity provider, then explicitly set:
+
+```sh
+kubectl -n openserverless annotate whisksusers/<namespace> \
+  openserverless.apache.org/sso-issuer='<exact configured issuer>' \
+  openserverless.apache.org/sso-sub='<verified owner subject>' --overwrite
+```
+
+This operation must not be delegated to an unauthenticated caller or derived from a matching
+username alone. If the binding was deliberately disabled, re-enabling it requires a separate
+administrator decision to remove or change `openserverless.apache.org/sso-disabled`.
+Auto-provisioning records the binding on a new namespace and never takes over an unbound
+existing namespace or one belonging to another subject. Binding is checked again after
+provisioning. Orphan metadata and a `WhiskUser` replaced during the login are rejected.
+
 ## Auto-provisioning
 
 By default, an OIDC login only succeeds if a `WhiskUser` for the resolved namespace already
