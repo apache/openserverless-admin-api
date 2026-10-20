@@ -55,6 +55,8 @@ class FakeKubeClient:
 
     def create_whisk_user(self, whisk_user):
         self.created.append(whisk_user)
+        if self.create_result:
+            self.existing = whisk_user
         return self.create_result
 
 
@@ -69,12 +71,22 @@ class AuthServiceOidcTest(unittest.TestCase):
         return AuthService(
             environ=env,
             couch_db=FakeCouchDB(docs),
-            kube_client=kube_client if kube_client is not None else object(),
+            kube_client=kube_client if kube_client is not None else FakeKubeClient(
+                existing={
+                    "metadata": {"annotations": {
+                        "openserverless.apache.org/sso-issuer": "http://issuer.test",
+                        "openserverless.apache.org/sso-sub": "owner-subject",
+                    }},
+                    "spec": {"auth": "uuid:key"},
+                }
+            ),
         )
 
     @patch("openserverless.impl.auth.auth_service.OidcTokenValidator")
     def test_oidc_login_returns_ops_login_data(self, validator_class):
         validator_class.return_value.validate.return_value = {
+            "iss": "http://issuer.test",
+            "sub": "owner-subject",
             "preferred_username": "devel",
         }
         service = self.service(
@@ -109,6 +121,8 @@ class AuthServiceOidcTest(unittest.TestCase):
     @patch("openserverless.impl.auth.auth_service.OidcTokenValidator")
     def test_oidc_login_returns_404_when_namespace_is_missing(self, validator_class):
         validator_class.return_value.validate.return_value = {
+            "iss": "http://issuer.test",
+            "sub": "owner-subject",
             "preferred_username": "missing.lab",
         }
         service = self.service([])
@@ -122,6 +136,8 @@ class AuthServiceOidcTest(unittest.TestCase):
     @patch("openserverless.impl.auth.auth_service.OidcTokenValidator")
     def test_oidc_login_returns_403_when_sso_binding_is_disabled(self, validator_class):
         validator_class.return_value.validate.return_value = {
+            "iss": "http://issuer.test",
+            "sub": "owner-subject",
             "preferred_username": "devel",
         }
         service = self.service(
@@ -183,7 +199,7 @@ class AuthServiceOidcTest(unittest.TestCase):
             kube_client=kube_client,
         )
 
-        with app.app_context():
+        with app.app_context(), patch.object(service, "_random_auth", return_value="uuid:key"):
             response = service.login_oidc("token")
 
         self.assertEqual(200, response.status_code)
@@ -268,7 +284,7 @@ class AuthServiceOidcTest(unittest.TestCase):
             kube_client=kube_client,
         )
 
-        with app.app_context():
+        with app.app_context(), patch.object(service, "_random_auth", return_value="uuid:key"):
             response = service.login_oidc("token")
 
         self.assertEqual(200, response.status_code)
@@ -286,6 +302,8 @@ class AuthServiceOidcTest(unittest.TestCase):
     @patch("openserverless.impl.auth.auth_service.OidcTokenValidator")
     def test_oidc_login_returns_500_when_auth_is_missing(self, validator_class):
         validator_class.return_value.validate.return_value = {
+            "iss": "http://issuer.test",
+            "sub": "owner-subject",
             "preferred_username": "developer.lab",
         }
         service = self.service(
