@@ -44,6 +44,10 @@ swagger_config = {
     "swagger_ui": True,
     "specs_route": "/system/apidocs/",
     "securityDefinitions": {
+        "provisioningBearer": {
+            "type": "apiKey", "name": "Authorization", "in": "header",
+            "description": "Bearer token from openserverless-user-provisioning-token"
+        },
         "openwhiskBasicAuth": {
             "type": "apiKey",
             "name": "Authorization",
@@ -80,4 +84,5 @@ listen_port = os.environ.get("LISTEN_PORT", "5000")
 import openserverless.rest.api
 import openserverless.rest.auth
 import openserverless.rest.build
+import openserverless.rest.users
 
