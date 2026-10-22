@@ -127,6 +127,11 @@ class AuthService:
             logging.warning(f"OIDC token validation failed: {exc}")
             return res_builder.build_error_message("Invalid OIDC token", 401)
 
+        # A username is a routing hint, not a stable external identity.
+        if any(not isinstance(claims.get(key), str) or not claims[key].strip()
+               for key in ("iss", "sub")):
+            return res_builder.build_error_message("Invalid OIDC identity", 401)
+
         username_claim = self._environ.get("OIDC_USERNAME_CLAIM", "preferred_username")
         external_username = claims[username_claim]
         try:
@@ -145,11 +150,16 @@ class AuthService:
                 403,
             )
 
-        if self.is_sso_login_disabled(login):
-            logging.warning(f"OIDC user {external_username} is unbound from namespace {login}")
+        whisk_user = self.kube_client.get_whisk_user(login)
+        if whisk_user and not self.is_sso_identity_bound(whisk_user, claims):
+            logging.warning(f"OIDC identity is not bound to namespace {login}")
             return res_builder.build_error_message("Forbidden", 403)
 
         user_data = self.fetch_user_data(login)
+
+        if user_data and not whisk_user:
+            # Orphan metadata must not be claimed through a concurrent create.
+            return res_builder.build_error_message("Forbidden", 403)
 
         if not user_data:
             user_data = self.provision_oidc_user_if_enabled(login, external_username, claims)
@@ -157,6 +167,17 @@ class AuthService:
         if not user_data:
             logging.warning(f"OIDC user {external_username} has no provisioned namespace")
             return res_builder.build_error_message("Namespace not provisioned", 404)
+
+        # Re-read after provisioning/waiting: an existing resource, including
+        # one found after a create conflict, must belong to this exact identity.
+        current_whisk_user = self.kube_client.get_whisk_user(login)
+        if not self.is_sso_identity_bound(current_whisk_user, claims):
+            return res_builder.build_error_message("Forbidden", 403)
+        if whisk_user and (
+            (whisk_user.get("metadata") or {}).get("uid")
+            != (current_whisk_user.get("metadata") or {}).get("uid")
+        ):
+            return res_builder.build_error_message("Forbidden", 403)
 
         login_data = self.map_login_data(user_data)
         if "AUTH" not in login_data:
@@ -184,8 +205,7 @@ class AuthService:
     def ensure_whisk_user(self, login, external_username, email, claims):
         existing_whisk_user = self.kube_client.get_whisk_user(login)
         if existing_whisk_user:
-            logging.info(f"WhiskUser for OIDC user {login} already exists")
-            return True
+            return self.is_sso_identity_bound(existing_whisk_user, claims)
 
         whisk_user = self.build_sso_whisk_user(login, external_username, email, claims)
         if self.kube_client.create_whisk_user(whisk_user):
@@ -193,9 +213,9 @@ class AuthService:
             return True
 
         # A concurrent login may have created the CR between get and create.
-        if self.kube_client.get_whisk_user(login):
-            logging.info(f"WhiskUser for OIDC user {login} found after create conflict")
-            return True
+        existing_whisk_user = self.kube_client.get_whisk_user(login)
+        if existing_whisk_user:
+            return self.is_sso_identity_bound(existing_whisk_user, claims)
 
         logging.error(f"failed to create WhiskUser for OIDC user {login}")
         return False
@@ -299,13 +319,18 @@ class AuthService:
         except (TypeError, ValueError):
             return default
 
-    def is_sso_login_disabled(self, login):
-        if not hasattr(self.kube_client, "get_whisk_user"):
+    def is_sso_identity_bound(self, whisk_user, claims):
+        if not whisk_user:
             return False
 
-        whisk_user = self.kube_client.get_whisk_user(login)
         annotations = ((whisk_user or {}).get("metadata") or {}).get("annotations") or {}
-        return self._is_truthy(annotations.get(SSO_DISABLED_ANNOTATION))
+        return (
+            not self._is_truthy(annotations.get(SSO_DISABLED_ANNOTATION))
+            and isinstance(claims.get("iss"), str) and bool(claims["iss"].strip())
+            and isinstance(claims.get("sub"), str) and bool(claims["sub"].strip())
+            and annotations.get(SSO_ISSUER_ANNOTATION) == claims["iss"]
+            and annotations.get(SSO_SUB_ANNOTATION) == claims["sub"]
+        )
 
     def map_login_data(self, user_data):
         """
