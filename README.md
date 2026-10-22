@@ -149,3 +149,5 @@ https://github.com/apache/openserverless-admin-api/actions
 ## Additional Documentation
 
 - [Deployer](docs/DEPLOYER.md)
+- [External user provisioning](docs/USER_PROVISIONING.md): optional Secret-authorized
+  create-user API, RBAC, service defaults, and lifecycle semantics.
